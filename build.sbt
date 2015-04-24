@@ -10,5 +10,6 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.rebeam" %% "transact" % "0.1-SNAPSHOT"
+  "org.rebeam" %% "transact" % "0.1-SNAPSHOT",
+  "io.spray" %%  "spray-json" % "1.3.1"
 )
