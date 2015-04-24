@@ -1,22 +1,28 @@
+import boxes.transact.ShelfDefault
 import org.rebeam.boxes.persistence._
 
 object Proto {
   def main(args: Array[String]): Unit = {
-    import WritesStringToString._
-    import WritesIntToString._
-    import WritesListToString._
 
-    println(Writing.write(List("A", "B", "C"), ""))
-    println(Writing.write(List(1, 2, 3), ""))
-//    println(Writing.write(List(1.0, 2, 3), ""))
+    implicit val shelf = ShelfDefault()
 
-    import WritesStringTokens._
-    import WritesIntTokens._
-    import WritesListTokens._
+    import WritesString._
+    import WritesInt._
+    import WritesList._
 
-    val c = new TokenTargetBuffer()
-    Writing.write("A", c)
-//    Writing.write(List("A", "B", "C"), c)
-    println(c)
+    shelf.read(implicit txn => {
+      val w = new BufferTokenWriter()
+      val c = WriteContext(w, txn)
+      Writing.write(List("A", "B", "C"), c)
+      println(w.tokens)
+    })
+
+    shelf.read(implicit txn => {
+      val w = new BufferTokenWriter()
+      val c = WriteContext(w, txn)
+      println(Writing.write(List(1, 2, 3), c))
+      println(w.tokens)
+    })
+
   }
 }
