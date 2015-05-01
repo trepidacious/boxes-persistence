@@ -1,15 +1,19 @@
 package org.rebeam.boxes.persistence
 
+import boxes.transact.Txn
+import boxes.transact.TxnR
+
+import annotation.implicitNotFound
+import scala.collection.mutable.ListBuffer
+
 sealed trait Token
 
 case object OpenObj extends Token
 case object CloseObj extends Token
 
-case class Box(id: Int) extends Token
+case class BoxToken(id: Int) extends Token
 
-sealed trait Prim[P] extends Token {
-  def p: P
-}
+sealed trait Prim[P] extends Token { def p: P }
 
 case class BooleanToken(p: Boolean) extends Prim[Boolean]
 case class IntToken(p: Int) extends Prim[Int]
@@ -25,45 +29,74 @@ case object CloseArr extends Token
 
 case object End extends Token
 
-
-//Result of checking for an object in the cache
-sealed abstract class CacheResult
-//Object is already cached, use a ref as given
-case class Cached(ref:Int) extends CacheResult
-//Object was not cached, use an id as given
-case class New(id:Int) extends CacheResult
-
-import boxes.transact.Txn
-import boxes.transact.TxnR
-
-import annotation.implicitNotFound
-import scala.collection.mutable.ListBuffer
-
 trait TokenWriter {
   def write(t: Token)
 }
 
-case class WriteContext(target: TokenWriter, txn: TxnR)
+case class WriteContext(writer: TokenWriter, txn: TxnR)
+
+class IncorrectTokenException(m: String) extends RuntimeException(m)
+class NoTokenException extends RuntimeException
 
 trait TokenReader {
+  @throws[NoTokenException]
   def peek: Token
+
+  @throws[NoTokenException]
   def pull(): Token
 
+  @throws [IncorrectTokenException]
   def pullAndAssert(t:Token) {
     val p = pull()
-    if (p != t) throw new RuntimeException("Expected " + t + ", got " + pull)
+    if (p != t) throw new IncorrectTokenException("Expected " + t + ", got " + p)
   }
+
+  def pullBoolean(): Boolean = {
+    val t = pull()
+    t match {
+      case BooleanToken(s) => s
+      case _ => throw new IncorrectTokenException("Expected a BooleanToken, got " + t)
+    }
+  }
+  def pullInt(): Int = {
+    val t = pull()
+    t match {
+      case IntToken(s) => s
+      case _ => throw new IncorrectTokenException("Expected an IntToken, got " + t)
+    }
+  }
+  def pullLong(): Long = {
+    val t = pull()
+    t match {
+      case LongToken(s) => s
+      case _ => throw new IncorrectTokenException("Expected a LongToken, got " + t)
+    }
+  }
+  def pullFloat(): Float = {
+    val t = pull()
+    t match {
+      case FloatToken(s) => s
+      case _ => throw new IncorrectTokenException("Expected a FloatToken, got " + t)
+    }
+  }
+  def pullDouble(): Double = {
+    val t = pull()
+    t match {
+      case DoubleToken(s) => s
+      case _ => throw new IncorrectTokenException("Expected a DoubleToken, got " + t)
+    }
+  }
+  def pullString(): String = {
+    val t = pull()
+    t match {
+      case StringToken(s) => s
+      case _ => throw new IncorrectTokenException("Expected a StringToken, got " + t)
+    }
+  }
+
 }
 
-case class ReadContext(source: TokenReader, txn: Txn)
-
-class BufferTokenWriter extends TokenWriter {
-  private val buffer = ListBuffer[Token]()
-  override def write(t: Token) = {
-    buffer.append(t)
-  }
-  def tokens = buffer.toList
-}
+case class ReadContext(reader: TokenReader, txn: Txn)
 
 /**
  * Provides reading of type T
@@ -108,29 +141,9 @@ object Writes {
  */
 trait Format[T] extends Reads[T] with Writes[T]
 
-
-object WritesString {
-  implicit val writesString = new Writes[String] {
-    def write(s: String, c: WriteContext) = c.target.write(StringToken(s))
-  }
-}
-
-object WritesInt {
-  implicit val writesInt = new Writes[Int] {
-    def write(i: Int, c: WriteContext) = c.target.write(IntToken(i))
-  }
-}
-
-object WritesList{
-  implicit def writesList[T](implicit writes: Writes[T]) = new Writes[List[T]] {
-    def write(list: List[T], c: WriteContext) {
-      c.target.write(OpenArr)
-      list.foreach(t => writes.write(t, c))
-      c.target.write(CloseArr)
-    }
-  }
-}
-
 object Writing {
   def write[T](obj: T, context: WriteContext)(implicit writes: Writes[T]) = writes.write(obj, context)
+}
+object Reading {
+  def read[T](context: ReadContext)(implicit reads: Reads[T]): T = reads.read(context)
 }
