@@ -4,9 +4,7 @@ import scala.collection.mutable.ListBuffer
 
 class BufferTokenWriter extends TokenWriter {
   private val buffer = ListBuffer[Token]()
-  override def write(t: Token) = {
-    buffer.append(t)
-  }
+  override def write(t: Token) = buffer.append(t)
   def tokens = buffer.toList
 }
 
@@ -20,3 +18,4 @@ class BufferTokenReader(tokens: List[Token]) extends TokenReader {
     buffer.remove(0)
   }
 }
+
