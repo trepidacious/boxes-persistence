@@ -75,33 +75,39 @@ object Proto {
 
     val bobBox = shelf.create("bob")
 
-    val boxTokens = shelf.read(implicit txn => {
-      val w = new BufferTokenWriter()
-      val c = WriteContext(w, txn)
-      Writing.write(List(bobBox, bobBox), c)
-      println(w.tokens)
-      w.tokens
-    })
+    {
+      import BoxFormatsUseLinks._
 
-    shelf.transact(implicit txn => {
-      val r = new BufferTokenReader(boxTokens)
-      val boxList = Reading.read[List[Box[String]]](new ReadContext(r, txn))
-      println(boxList(0) + ", value " + boxList(0)() + ", " + boxList(1) + ", value " + boxList(1)())
-    })
+      val boxTokens = shelf.read(implicit txn => {
 
-    val boxTokens2 = shelf.read(implicit txn => {
-      val w = new BufferTokenWriter()
-      val c = WriteContext(w, txn, boxLinkStrategy = NoLinks)
-      Writing.write(List(bobBox, bobBox), c)
-      println(w.tokens)
-      w.tokens
-    })
+        val w = new BufferTokenWriter()
+        val c = WriteContext(w, txn)
+        Writing.write(List(bobBox, bobBox), c)
+        println(w.tokens)
+        w.tokens
+      })
+      shelf.transact(implicit txn => {
+        val r = new BufferTokenReader(boxTokens)
+        val boxList = Reading.read[List[Box[String]]](new ReadContext(r, txn))
+        println(boxList(0) + ", value " + boxList(0)() + ", " + boxList(1) + ", value " + boxList(1)())
+      })
+    }
 
-    shelf.transact(implicit txn => {
-      val r = new BufferTokenReader(boxTokens2)
-      val boxList = Reading.read[List[Box[String]]](new ReadContext(r, txn))
-      println(boxList(0) + ", value " + boxList(0)() + ", " + boxList(1) + ", value " + boxList(1)())
-    })
+    {
+      import BoxFormatsNoLinks._
 
+      val boxTokens2 = shelf.read(implicit txn => {
+        val w = new BufferTokenWriter()
+        val c = WriteContext(w, txn)
+        Writing.write(List(bobBox, bobBox), c)
+        println(w.tokens)
+        w.tokens
+      })
+      shelf.transact(implicit txn => {
+        val r = new BufferTokenReader(boxTokens2)
+        val boxList = Reading.read[List[Box[String]]](new ReadContext(r, txn))
+        println(boxList(0) + ", value " + boxList(0)() + ", " + boxList(1) + ", value " + boxList(1)())
+      })
+    }
   }
 }

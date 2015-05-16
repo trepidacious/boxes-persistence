@@ -209,8 +209,7 @@ case object NoLinks extends LinkStrategy
  */
 case object UseLinks extends LinkStrategy
 
-case class WriteContext(writer: TokenWriter, txn: TxnR,
-                        boxLinkStrategy: LinkStrategy = UseLinks, nodeLinkStrategy: LinkStrategy = UseLinks)
+case class WriteContext(writer: TokenWriter, txn: TxnR)
 
 class IncorrectTokenException(m: String) extends RuntimeException(m)
 class NoTokenException extends RuntimeException
@@ -298,8 +297,7 @@ trait TokenReader {
 
 }
 
-case class ReadContext(reader: TokenReader, txn: Txn,
-                       boxLinkStrategy: LinkStrategy = UseLinks, nodeLinkStrategy: LinkStrategy = UseLinks)
+case class ReadContext(reader: TokenReader, txn: Txn)
 
 /**
  * Provides reading of type T
