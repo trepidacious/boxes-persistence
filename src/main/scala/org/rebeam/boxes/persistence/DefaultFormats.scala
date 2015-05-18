@@ -45,7 +45,7 @@ object TokenUtils {
 trait LowPriorityCollectionFormats {
 
   //This is the lower-priority writer for maps, works in all cases but needs to use more boiler-plate in representation of non-string keys.
-  implicit def writesMap[K, V](implicit writesK: Writes[K], writesV: Writes[V]) = new Writes[Map[K, V]] {
+  implicit def writesMap[K, V](implicit writesK: Writes[K], writesV: Writes[V]): Writes[Map[K, V]] = new Writes[Map[K, V]] {
     def write(map: Map[K, V], c: WriteContext): Unit = {
       c.writer.write(OpenArr(PresentationName("Map")))
       map.foreach(entry => {
@@ -60,7 +60,7 @@ trait LowPriorityCollectionFormats {
     }
   }
 
-  implicit def readsMap[K, V](implicit readsK: Reads[K], readsV: Reads[V]) = new Reads[Map[K, V]] {
+  implicit def readsMap[K, V](implicit readsK: Reads[K], readsV: Reads[V]): Reads[Map[K, V]] = new Reads[Map[K, V]] {
 
     def readKeyOrValue(c: ReadContext): Either[K, V] = {
       c.reader.pull() match {
@@ -106,14 +106,14 @@ trait LowPriorityCollectionFormats {
 }
 
 object CollectionFormats extends LowPriorityCollectionFormats {
-  implicit def writesList[T](implicit writes: Writes[T]) = new Writes[List[T]] {
+  implicit def writesList[T](implicit writes: Writes[T]): Writes[List[T]] = new Writes[List[T]] {
     def write(list: List[T], c: WriteContext) {
       c.writer.write(OpenArr(PresentationName("List")))
       list.foreach(t => writes.write(t, c))
       c.writer.write(CloseArr)
     }
   }
-  implicit def readsList[T](implicit reads: Reads[T]) = new Reads[List[T]] {
+  implicit def readsList[T](implicit reads: Reads[T]): Reads[List[T]] = new Reads[List[T]] {
     def read(c: ReadContext) = {
       val b = ListBuffer[T]()
       c.reader.pull match {
@@ -129,14 +129,14 @@ object CollectionFormats extends LowPriorityCollectionFormats {
     }
   }
 
-  implicit def writesSet[T](implicit writes: Writes[T]) = new Writes[Set[T]] {
+  implicit def writesSet[T](implicit writes: Writes[T]): Writes[Set[T]] = new Writes[Set[T]] {
     def write(list: Set[T], c: WriteContext) {
       c.writer.write(OpenArr(PresentationName("Set")))
       list.foreach(t => writes.write(t, c))
       c.writer.write(CloseArr)
     }
   }
-  implicit def readsSet[T](implicit reads: Reads[T]) = new Reads[Set[T]] {
+  implicit def readsSet[T](implicit reads: Reads[T]): Reads[Set[T]] = new Reads[Set[T]] {
     def read(c: ReadContext) = {
       val b = ListBuffer[T]()
       c.reader.pull match {
@@ -154,7 +154,7 @@ object CollectionFormats extends LowPriorityCollectionFormats {
 
   //This is the higher-priority writer for Maps that have string keys, it can use a more compact representation
   //that should also be more idiomatic in e.g. JSON and XML
-  implicit def writesStringKeyedMap[V](implicit writes: Writes[V]) = new Writes[Map[String, V]] {
+  implicit def writesStringKeyedMap[V](implicit writes: Writes[V]): Writes[Map[String, V]] = new Writes[Map[String, V]] {
     def write(map: Map[String, V], c: WriteContext): Unit = {
       c.writer.write(OpenDict(PresentationName("Map")))
       map.foreach(entry => {
@@ -165,7 +165,7 @@ object CollectionFormats extends LowPriorityCollectionFormats {
     }
   }
 
-  implicit def readsStringKeyedMap[V](implicit reads: Reads[V]) = new Reads[Map[String, V]] {
+  implicit def readsStringKeyedMap[V](implicit reads: Reads[V]): Reads[Map[String, V]] = new Reads[Map[String, V]] {
     def read(c: ReadContext) = {
       c.reader.pull() match {
         case OpenDict(_, _) => {
@@ -190,7 +190,7 @@ object CollectionFormats extends LowPriorityCollectionFormats {
 }
 
 object BasicFormats {
-  implicit def writesOption[T](implicit writes: Writes[T]) = new Writes[Option[T]] {
+  implicit def writesOption[T](implicit writes: Writes[T]): Writes[Option[T]] = new Writes[Option[T]] {
     def write(option: Option[T], c: WriteContext) {
       option match {
         case Some(v) => writes.write(v, c)
@@ -198,7 +198,7 @@ object BasicFormats {
       }
     }
   }
-  implicit def readsOption[T](implicit reads: Reads[T]) = new Reads[Option[T]] {
+  implicit def readsOption[T](implicit reads: Reads[T]): Reads[Option[T]] = new Reads[Option[T]] {
     def read(c: ReadContext) = {
       c.reader.peek match {
         case NoneToken => {
@@ -270,28 +270,28 @@ private object BoxFormatUtils {
 }
 
 object BoxFormatsNoLinksOrDuplicates {
-  implicit def writesBox[T](implicit writes: Writes[T]) = new Writes[Box[T]] {
+  implicit def writesBox[T](implicit writes: Writes[T]): Writes[Box[T]] = new Writes[Box[T]] {
     def write(box: Box[T], writeContext: WriteContext) = BoxFormatUtils.write(box, writeContext, NoLinksOrDuplicates, writes)
   }
-  implicit def readsBox[T](implicit reads: Reads[T]) = new Reads[Box[T]] {
+  implicit def readsBox[T](implicit reads: Reads[T]): Reads[Box[T]] = new Reads[Box[T]] {
     def read(readContext: ReadContext) = BoxFormatUtils.read(readContext, NoLinksOrDuplicates, reads)
   }
 }
 
 object BoxFormatsNoLinks {
-  implicit def writesBox[T](implicit writes: Writes[T]) = new Writes[Box[T]] {
+  implicit def writesBox[T](implicit writes: Writes[T]): Writes[Box[T]] = new Writes[Box[T]] {
     def write(box: Box[T], writeContext: WriteContext) = BoxFormatUtils.write(box, writeContext, NoLinks, writes)
   }
-  implicit def readsBox[T](implicit reads: Reads[T]) = new Reads[Box[T]] {
+  implicit def readsBox[T](implicit reads: Reads[T]): Reads[Box[T]] = new Reads[Box[T]] {
     def read(readContext: ReadContext) = BoxFormatUtils.read(readContext, NoLinks, reads)
   }
 }
 
 object BoxFormatsUseLinks {
-  implicit def writesBox[T](implicit writes: Writes[T]) = new Writes[Box[T]] {
+  implicit def writesBox[T](implicit writes: Writes[T]): Writes[Box[T]] = new Writes[Box[T]] {
     def write(box: Box[T], writeContext: WriteContext) = BoxFormatUtils.write(box, writeContext, UseLinks, writes)
   }
-  implicit def readsBox[T](implicit reads: Reads[T]) = new Reads[Box[T]] {
+  implicit def readsBox[T](implicit reads: Reads[T]): Reads[Box[T]] = new Reads[Box[T]] {
     def read(readContext: ReadContext) = BoxFormatUtils.read(readContext, UseLinks, reads)
   }
 }

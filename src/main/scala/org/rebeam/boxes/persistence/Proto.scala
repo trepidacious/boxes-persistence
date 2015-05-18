@@ -1,8 +1,48 @@
 import boxes.transact.{Box, ShelfDefault}
 import org.rebeam.boxes.persistence._
+import shapeless.Generic
+
+case class C(a: String, b: Int)
 
 object Proto {
+
   def main(args: Array[String]): Unit = {
+    implicit val shelf = ShelfDefault()
+
+    import PrimFormats._
+    import CollectionFormats._
+    import BasicFormats._
+
+    import shapeless._
+    import record._
+    import ops.record._
+    import syntax.singleton._
+
+    val c = C("aValue", 1)
+
+    val cGen = LabelledGeneric[C]
+
+    val cRec = cGen.to(c)
+
+    val cKeys = Keys[cGen.Repr]
+
+    println("cRec = " + cRec)
+
+    println(cRec('a))
+    println(cRec.values)
+    println(cKeys)
+
+//    val cKeys = Keys[cGen.Repr].apply
+//
+//    println(cKeys)
+//
+//    println(cKeys.toList.map(_.name))
+
+    //    println(cGen.keys)
+
+  }
+
+  def main2(args: Array[String]): Unit = {
 
     implicit val shelf = ShelfDefault()
 
