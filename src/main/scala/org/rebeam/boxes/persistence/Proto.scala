@@ -1,8 +1,17 @@
-import boxes.transact.{Box, ShelfDefault}
+import boxes.transact.{TxnR, Txn, Box, ShelfDefault}
 import org.rebeam.boxes.persistence._
 import shapeless.Generic
 
-case class C(a: String, b: Int)
+case class Person(name: Box[String], age: Box[Int]) {
+  def asString(implicit txn: TxnR) = "Person(" + name() + ", " + age() + ")"
+}
+
+object Person {
+  def default(txn: Txn): Person = {
+    implicit val t = txn
+    Person(Box(""), Box(0))
+  }
+}
 
 object Proto {
 
@@ -10,36 +19,50 @@ object Proto {
     implicit val shelf = ShelfDefault()
 
     import PrimFormats._
-    import CollectionFormats._
-    import BasicFormats._
+    import BoxFormatsUseLinks._
+    import ProductFormats._
+    import NodeFormats._
 
-    import shapeless._
-    import record._
-    import ops.record._
-    import syntax.singleton._
+    {
 
-    val c = C("aValue", 1)
+      implicit val personFormat = productFormat2(Person.apply)("name", "age")(PresentationName("Person"))
 
-    val cGen = LabelledGeneric[C]
+      val bobTokens = shelf.transact(implicit txn => {
+        val bob = Person(Box("Bob"), Box(34))
 
-    val cRec = cGen.to(c)
+        val w = new BufferTokenWriter()
+        val c = WriteContext(w, txn)
+        Writing.write(bob, c)
+        println(w.tokens)
+        w.tokens
+      })
 
-    val cKeys = Keys[cGen.Repr]
+      shelf.transact(implicit txn => {
+        val r = new BufferTokenReader(bobTokens)
+        val bob2 = Reading.read[Person](new ReadContext(r, txn))
+        println(bob2.asString)
+      })
+    }
 
-    println("cRec = " + cRec)
+    {
+      implicit val personNodeFormat = nodeFormat2(Person.apply, Person.default)("name", "age")(PresentationName("Person"))
 
-    println(cRec('a))
-    println(cRec.values)
-    println(cKeys)
+      val bobTokens = shelf.transact(implicit txn => {
+        val bob = Person(Box("Bob"), Box(34))
 
-//    val cKeys = Keys[cGen.Repr].apply
-//
-//    println(cKeys)
-//
-//    println(cKeys.toList.map(_.name))
+        val w = new BufferTokenWriter()
+        val c = WriteContext(w, txn)
+        Writing.write(bob, c)
+        println(w.tokens)
+        w.tokens
+      })
 
-    //    println(cGen.keys)
-
+      shelf.transact(implicit txn => {
+        val r = new BufferTokenReader(bobTokens)
+        val bob2 = Reading.read[Person](new ReadContext(r, txn))
+        println(bob2.asString)
+      })
+    }
   }
 
   def main2(args: Array[String]): Unit = {
