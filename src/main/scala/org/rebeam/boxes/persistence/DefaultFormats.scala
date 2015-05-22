@@ -49,7 +49,12 @@ object TokenUtils {
 //Writes and Reads here, and the more specific ones later.
 trait LowPriorityCollectionFormats {
 
-  //This is the lower-priority writer for maps, works in all cases but needs to use more boiler-plate in representation of non-string keys.
+  //This is the lower-priority format for maps, works in all cases but needs to use more boiler-plate in representation of non-string keys.
+  implicit def mapFormat[K, V](implicit writesK: Writes[K], writesV: Writes[V], readsK: Reads[K], readsV: Reads[V]): Format[Map[K, V]] = new Format[Map[K, V]] {
+    def write(map: Map[K, V], writeContext: WriteContext) = writesMap[K, V].write(map, writeContext)
+    def read(readContext: ReadContext) = readsMap[K, V].read(readContext)
+  }
+
   implicit def writesMap[K, V](implicit writesK: Writes[K], writesV: Writes[V]): Writes[Map[K, V]] = new Writes[Map[K, V]] {
     def write(map: Map[K, V], c: WriteContext): Unit = {
       c.writer.write(OpenArr(PresentationName("Map")))
@@ -69,9 +74,9 @@ trait LowPriorityCollectionFormats {
 
     def readKeyOrValue(c: ReadContext): Either[K, V] = {
       c.reader.pull() match {
-        case DictEntry("key") => Left(readsK.read(c))
-        case DictEntry("value") => Right(readsV.read(c))
-        case _ => throw new IncorrectTokenException("Expected DictEntry(value) in Map[_, _] entry dict")
+        case DictEntry("key", LinkEmpty) => Left(readsK.read(c))
+        case DictEntry("value", LinkEmpty) => Right(readsV.read(c))
+        case _ => throw new IncorrectTokenException("Expected DictEntry(value, LinkEmpty) in Map[_, _] entry dict")
       }
     }
 
@@ -86,23 +91,21 @@ trait LowPriorityCollectionFormats {
     def read(c: ReadContext) = {
 
       c.reader.pull() match {
-        case OpenArr(_) => {
+        case OpenArr(_) =>
           val entries = ListBuffer[(K, V)]()
           while (c.reader.peek != CloseArr) {
 
             entries.append(c.reader.pull() match {
-              case OpenDict(_, _) => {
+              case OpenDict(_, _) =>
                 val entry = readKeyAndValue(c)
                 c.reader.pullAndAssertEquals(CloseDict)
                 entry
-              }
               case _ => throw new IncorrectTokenException("Expected OpenDict for each Map[_, _] entry")
             })
 
           }
           c.reader.pullAndAssertEquals(CloseArr)
           Map(entries: _*)
-        }
         case _ => throw new IncorrectTokenException("Expected OpenArr at start of Map[_, _]")
       }
 
@@ -121,17 +124,21 @@ object CollectionFormats extends LowPriorityCollectionFormats {
   implicit def readsList[T](implicit reads: Reads[T]): Reads[List[T]] = new Reads[List[T]] {
     def read(c: ReadContext) = {
       val b = ListBuffer[T]()
-      c.reader.pull match {
-        case OpenArr(_) => {
+      c.reader.pull() match {
+        case OpenArr(_) =>
           while (c.reader.peek != CloseArr) {
             b.append(reads.read(c))
           }
           c.reader.pullAndAssertEquals(CloseArr)
           b.toList
-        }
+
         case _ => throw new IncorrectTokenException("Expected OpenArr at start of List[_]")
       }
     }
+  }
+  implicit def listFormat[T](implicit reads: Reads[T], writes: Writes[T]): Format[List[T]] = new Format[List[T]] {
+    override def read(context: ReadContext): List[T] = readsList[T].read(context)
+    override def write(obj: List[T], context: WriteContext): Unit = writesList[T].write(obj, context)
   }
 
   implicit def writesSet[T](implicit writes: Writes[T]): Writes[Set[T]] = new Writes[Set[T]] {
@@ -144,17 +151,21 @@ object CollectionFormats extends LowPriorityCollectionFormats {
   implicit def readsSet[T](implicit reads: Reads[T]): Reads[Set[T]] = new Reads[Set[T]] {
     def read(c: ReadContext) = {
       val b = ListBuffer[T]()
-      c.reader.pull match {
-        case OpenArr(_) => {
+      c.reader.pull() match {
+        case OpenArr(_) =>
           while (c.reader.peek != CloseArr) {
             b.append(reads.read(c))
           }
           c.reader.pullAndAssertEquals(CloseArr)
           b.toSet
-        }
+
         case _ => throw new IncorrectTokenException("Expected OpenArr at start of Set[_]")
       }
     }
+  }
+  implicit def setFormat[T](implicit reads: Reads[T], writes: Writes[T]): Format[Set[T]] = new Format[Set[T]] {
+    override def read(context: ReadContext): Set[T] = readsSet[T].read(context)
+    override def write(obj: Set[T], context: WriteContext): Unit = writesSet[T].write(obj, context)
   }
 
   //This is the higher-priority writer for Maps that have string keys, it can use a more compact representation
@@ -173,24 +184,30 @@ object CollectionFormats extends LowPriorityCollectionFormats {
   implicit def readsStringKeyedMap[V](implicit reads: Reads[V]): Reads[Map[String, V]] = new Reads[Map[String, V]] {
     def read(c: ReadContext) = {
       c.reader.pull() match {
-        case OpenDict(_, _) => {
+        case OpenDict(_, _) =>
           val entries = ListBuffer[(String, V)]()
           while (c.reader.peek != CloseDict) {
             entries.append(c.reader.pull() match {
-              case DictEntry(key) => {
+              case DictEntry(key, LinkEmpty) => {
                 val value = reads.read(c)
                 (key, value)
               }
-              case _ => throw new IncorrectTokenException("Expected DictEntry at start of Map[String, _] entry")
+              case _ => throw new IncorrectTokenException("Expected DictEntry(key, LinkEmpty) at start of Map[String, _] entry")
             })
           }
           c.reader.pullAndAssertEquals(CloseDict)
           Map(entries: _*)
-        }
+
         case _ => throw new IncorrectTokenException("Expected OpenDict at start of Map[String, _]")
       }
     }
   }
+
+  implicit def stringKeyedMapFormat[V](implicit writesV: Writes[V], readsV: Reads[V]): Format[Map[String, V]] = new Format[Map[String, V]] {
+    def write(map: Map[String, V], writeContext: WriteContext) = writesStringKeyedMap[V].write(map, writeContext)
+    def read(readContext: ReadContext) = readsStringKeyedMap[V].read(readContext)
+  }
+
 
 }
 
@@ -206,10 +223,10 @@ object BasicFormats {
   implicit def readsOption[T](implicit reads: Reads[T]): Reads[Option[T]] = new Reads[Option[T]] {
     def read(c: ReadContext) = {
       c.reader.peek match {
-        case NoneToken => {
+        case NoneToken =>
           c.reader.pullAndAssertEquals(NoneToken)
           None
-        }
+
         case _ => Some(reads.read(c))
       }
     }
@@ -221,7 +238,7 @@ private object BoxFormatUtils {
     val id = box.id()
     linkStrategy match {
 
-      case UseLinks => {
+      case UseLinks =>
         if (c.writer.isBoxCached(id)) {
           c.writer.write(BoxToken(LinkRef(id)))
         } else {
@@ -229,14 +246,12 @@ private object BoxFormatUtils {
           c.writer.cacheBox(id) //Mark box as cached
           writes.write(box.get()(c.txn), c)
         }
-      }
 
-      case NoLinks => {
+      case NoLinks =>
         c.writer.write(BoxToken(LinkEmpty))
         writes.write(box.get()(c.txn), c)
-      }
 
-      case NoLinksOrDuplicates => {
+      case NoLinksOrDuplicates =>
         if (c.writer.isBoxCached(id)) {
           throw new BoxCacheException("Box id " + id + " was already cached, but boxLinkStrategy is NoLinksOrDuplicates")
         } else {
@@ -244,31 +259,30 @@ private object BoxFormatUtils {
           c.writer.cacheBox(id) //Mark box as cached
           writes.write(box.get()(c.txn), c)
         }
-      }
+
     }
   }
 
   def read[T](c: ReadContext, linkStrategy: LinkStrategy, reads: Reads[T]) = {
     c.reader.pull() match {
-      case BoxToken(link) => {
+      case BoxToken(link) =>
         link match {
           case LinkEmpty => c.txn.create(reads.read(c))
-          case LinkId(id) => {
+          case LinkId(id) =>
             if (linkStrategy == NoLinks || linkStrategy == NoLinksOrDuplicates) {
               throw new BoxCacheException("Found a Box LinkId (" + id + ") but boxLinkStrategy is " + linkStrategy)
             }
             val box = c.txn.create(reads.read(c))
             c.reader.putBox(id, box)
             box
-          }
-          case LinkRef(id) => {
+
+          case LinkRef(id) =>
             if (linkStrategy == NoLinks || linkStrategy == NoLinksOrDuplicates) {
               throw new BoxCacheException("Found a Box LinkRef( " + id + ") but boxLinkStrategy is " + linkStrategy)
             }
             c.reader.getBox(id).asInstanceOf[Box[T]]
-          }
         }
-      }
+
       case _ => throw new IncorrectTokenException("Expected BoxToken at start of Box[_]")
     }
   }
@@ -281,7 +295,7 @@ object BoxFormatsNoLinksOrDuplicates {
   implicit def readsBox[T](implicit reads: Reads[T]): Reads[Box[T]] = new Reads[Box[T]] {
     def read(readContext: ReadContext) = BoxFormatUtils.read(readContext, NoLinksOrDuplicates, reads)
   }
-  implicit def boxFormat[T](implicit reads: Reads[T], writes: Writes[T]) = new Format[Box[T]] {
+  implicit def boxFormat[T](implicit reads: Reads[T], writes: Writes[T]): Format[Box[T]] = new Format[Box[T]] {
     def write(box: Box[T], writeContext: WriteContext) = BoxFormatUtils.write(box, writeContext, NoLinksOrDuplicates, writes)
     def read(readContext: ReadContext) = BoxFormatUtils.read(readContext, NoLinksOrDuplicates, reads)
   }
@@ -294,7 +308,7 @@ object BoxFormatsNoLinks {
   implicit def readsBox[T](implicit reads: Reads[T]): Reads[Box[T]] = new Reads[Box[T]] {
     def read(readContext: ReadContext) = BoxFormatUtils.read(readContext, NoLinks, reads)
   }
-  implicit def boxFormat[T](implicit reads: Reads[T], writes: Writes[T]) = new Format[Box[T]] {
+  implicit def boxFormat[T](implicit reads: Reads[T], writes: Writes[T]): Format[Box[T]] = new Format[Box[T]] {
     def write(box: Box[T], writeContext: WriteContext) = BoxFormatUtils.write(box, writeContext, NoLinks, writes)
     def read(readContext: ReadContext) = BoxFormatUtils.read(readContext, NoLinks, reads)
   }
@@ -309,7 +323,7 @@ object BoxFormatsUseLinks {
     def read(readContext: ReadContext) = BoxFormatUtils.read(readContext, UseLinks, reads)
   }
 
-  implicit def boxFormat[T](implicit reads: Reads[T], writes: Writes[T]) = new Format[Box[T]] {
+  implicit def boxFormat[T](implicit reads: Reads[T], writes: Writes[T]): Format[Box[T]] = new Format[Box[T]] {
     def write(box: Box[T], writeContext: WriteContext) = BoxFormatUtils.write(box, writeContext, UseLinks, writes)
     def read(readContext: ReadContext) = BoxFormatUtils.read(readContext, UseLinks, reads)
   }
@@ -325,7 +339,7 @@ object ProductFormats {
   }
 
   private def readDictEntry[T :Format](name: String, c: ReadContext): T = {
-    c.reader.pullAndAssertEquals(DictEntry(name))
+    c.reader.pullAndAssertEquals(DictEntry(name, LinkEmpty))
     implicitly[Format[T]].read(c)
   }
 
@@ -340,14 +354,14 @@ object ProductFormats {
 
     def read(c: ReadContext): P = {
       c.reader.pull() match {
-        case OpenDict(_, _) => {
+        case OpenDict(_, _) =>
           val n = construct(
             readDictEntry[P1](name1, c),
             readDictEntry[P2](name2, c)
           )
           c.reader.pullAndAssertEquals(CloseDict)
           n
-        }
+
         case _ => throw new IncorrectTokenException("Expected OpenDict at start of Map[String, _]")
       }
     }
@@ -358,8 +372,12 @@ object ProductFormats {
 /**
  * These formats are very similar to ProductFormats, with the important difference that they expect to read/write
  * case classes (Products) of Boxes, which we call "Nodes" for example case class Person(name: Box[String], age: Box[Int]).
- * We refer to the Node's class as N below.
- * They use a largely interchangeable format with ProductFormats, however there are some additional requirements/features:
+ * We refer to the Node's class as N below. Writes as a Dict with an entry for each box, containing the value of the box.
+ * The link in the DictEntry itself is used to provide an id for the Box if required, BoxTokens are not used since they
+ * are redundant. This means that a Node containing Boxes of types B1, B2 etc. will be serialised similarly to a Product
+ * containing unboxed values of B1, B2 etc. Refs are never used.
+ *
+ * There are some additional requirements/features when using these formats:
  *  1. When reading, the formats always create the instance of N via a provided default method of type (Txn) => N,
  *  which is expected to create a "default" case class with entirely new boxes.
  *  2. When reading, it is acceptable for some fields to be missing - they are left as defaults. The reading process
@@ -382,9 +400,6 @@ object NodeFormats {
     val box = n.productElement(index).asInstanceOf[Box[T]]
     val id = box.id()
 
-    //Open an entry for the Box
-    c.writer.write(DictEntry(name))
-
     //NodeFormat will not use link references, but can use ids, for example for sharing box id with clients on network.
     //This is done by caching the box and using the id, but throwing an exception if we find the box is already cached.
     //This ensures that only one copy of the Box is in use in a Node, so that the Node technique of recreating Nodes
@@ -394,32 +409,31 @@ object NodeFormats {
       throw new BoxCacheException("Box id " + id + " was already cached, but NodeFormats doesn't work with multiply-referenced Boxes")
     } else {
 
-      val boxToken = linkStrategy match {
-        case UseLinks => BoxToken(LinkId(id))
-        case NoLinksOrDuplicates => BoxToken(LinkEmpty)
-        case NoLinks => BoxToken(LinkEmpty)             //We always enforce no duplicates anyway
+      val link = linkStrategy match {
+        case UseLinks => LinkId(id)
+        case NoLinksOrDuplicates => LinkEmpty
+        case NoLinks => LinkEmpty             //We always enforce no duplicates anyway
       }
-      c.writer.write(boxToken)
+
+      //Open an entry for the Box
+      c.writer.write(DictEntry(name, link))
+
       c.writer.cacheBox(id)
       implicitly[Format[T]].write(box.get(), c)
     }
   }
 
-  private def useDictEntry[T :Format](n: Product, index: Int, c: ReadContext): Unit = {
+  private def useDictEntry[T :Format](n: Product, index: Int, c: ReadContext, link: Link): Unit = {
     implicit val txn = c.txn
     val box = n.productElement(index).asInstanceOf[Box[T]]
 
     //We accept LinkEmpty, with nothing to do, or LinkId, in which case we putBox in case of any later references.
     //We do NOT accept LinkRef, since we never write one.
-    c.reader.pull() match {
-      case BoxToken(link) => link match {
-        case LinkEmpty => {}                            //No cache stuff to do
-        case LinkId(id) => c.reader.putBox(id, box)     //Cache our box for anything using it later in stream
-        case LinkRef(id) => throw new IncorrectTokenException("BoxToken must NOT have a LinkRef in a Node Dict, a ref to id " + id)
-      }
-      case x => throw new IncorrectTokenException("Expected BoxToken in a Node Dict value, got " + x)
+    link match {
+      case LinkEmpty => {}                            //No cache stuff to do
+      case LinkId(id) => c.reader.putBox(id, box)     //Cache our box for anything using it later in stream
+      case LinkRef(id) => throw new IncorrectTokenException("DictEntry must NOT have a LinkRef in a Node Dict, found ref to " + id)
     }
-
     box.set(implicitly[Format[T]].read(c))
   }
 
@@ -435,14 +449,14 @@ object NodeFormats {
     def read(c: ReadContext): N = {
       implicit val txn = c.txn
       c.reader.pull() match {
-        case OpenDict(_, _) => {
+        case OpenDict(_, _) =>
           val n = default(txn)
 
           while (c.reader.peek != CloseDict) {
-            c.reader.pull match {
-              case DictEntry(fieldName) => fieldName match {
-                case s if s == name1 => useDictEntry[P1](n, 0, c)
-                case s if s == name2 => useDictEntry[P2](n, 1, c)
+            c.reader.pull() match {
+              case DictEntry(fieldName, link) => fieldName match {
+                case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+                case s if s == name2 => useDictEntry[P2](n, 1, c, link)
                 case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
               }
               case x: Token => throw new IncorrectTokenException("Expected only DictEntry's in a Node Dict, got " + x)
@@ -451,10 +465,51 @@ object NodeFormats {
 
           c.reader.pullAndAssertEquals(CloseDict)
           n
-        }
+
         case _ => throw new IncorrectTokenException("Expected OpenDict at start of Map[String, _]")
       }
     }
 
   }
+
+  def nodeFormat4[P1: Format, P2: Format, P3: Format, P4: Format, N <: Product :ClassTag](construct: (Box[P1], Box[P2], Box[P3], Box[P4]) => N, default: (Txn) => N)(name1: String, name2: String, name3: String, name4: String)(name: TokenName = NoName, linkStrategy: LinkStrategy = NoLinks) : Format[N] = new Format[N] {
+
+    def write(n: N, c: WriteContext): Unit = {
+      c.writer.write(OpenDict(name))
+      writeDictEntry[P1](n, name1, 0, c, linkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, linkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, linkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, linkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def read(c: ReadContext): N = {
+      implicit val txn = c.txn
+      c.reader.pull() match {
+        case OpenDict(_, _) =>
+          val n = default(txn)
+
+          while (c.reader.peek != CloseDict) {
+            c.reader.pull() match {
+              case DictEntry(fieldName, link) => fieldName match {
+                case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+                case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+                case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+                case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+                case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+              }
+              case x: Token => throw new IncorrectTokenException("Expected only DictEntry's in a Node Dict, got " + x)
+            }
+          }
+
+          c.reader.pullAndAssertEquals(CloseDict)
+          n
+
+        case _ => throw new IncorrectTokenException("Expected OpenDict at start of Map[String, _]")
+      }
+    }
+
+  }
+
+
 }

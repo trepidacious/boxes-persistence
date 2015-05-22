@@ -65,10 +65,13 @@ case class OpenDict(name: TokenName = NoName, link: Link = LinkEmpty) extends To
 
 /**
  * Start an entry in a dictionary. Must be between OpenDict and CloseDict tokens, and
- * must be followed by tokens representing exactly one value
+ * must be followed by tokens representing exactly one value, unless link is LinkRef in which
+ * case it stands alone as an entry containing the referenced item (normally a Box)
  * @param key  The string key of the dict entry
+ * @param link For plain dictionaries, this is always LinkEmpty. For dictionaries using links,
+ *             may be a LinkId or LinkRef, normally the id used is the id of an associated Box.
  */
-case class DictEntry(key: String) extends Token
+case class DictEntry(key: String, link: Link = LinkEmpty) extends Token
 
 /**
  * Close a dictionary
@@ -106,11 +109,6 @@ case object NoneToken extends Token
  */
 case class OpenArr(name: TokenName) extends Token
 case object CloseArr extends Token
-
-/**
- * Marks the end of a stream of tokens
- */
-case object End extends Token
 
 /**
  * Result of checking for an object in the cache

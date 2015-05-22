@@ -1,3 +1,5 @@
+import java.io.{StringWriter, ByteArrayInputStream, ByteArrayOutputStream}
+
 import boxes.transact.{TxnR, Txn, Box, ShelfDefault}
 import org.rebeam.boxes.persistence._
 import shapeless.Generic
@@ -13,18 +15,31 @@ object Person {
   }
 }
 
+case class JsonStuff(name: Box[String], age: Box[Int], map: Box[Map[String, Person]], list: Box[List[Int]]) {
+  def asString(implicit txn: TxnR) = "Person(" + name() + ", " + age() + ", " + map() + ", " + list() +")"
+}
+
+object JsonStuff {
+  def default(txn: Txn): JsonStuff = {
+    implicit val t = txn
+    JsonStuff(Box(""), Box(0), Box(Map()), Box(List()))
+  }
+}
+
+
 object Proto {
 
   def main(args: Array[String]): Unit = {
     implicit val shelf = ShelfDefault()
 
     import PrimFormats._
+    import CollectionFormats._
     import BoxFormatsUseLinks._
     import ProductFormats._
     import NodeFormats._
 
     {
-
+      println("Product format, token buffer")
       implicit val personFormat = productFormat2(Person.apply)("name", "age")(PresentationName("Person"))
 
       val bobTokens = shelf.transact(implicit txn => {
@@ -45,6 +60,110 @@ object Proto {
     }
 
     {
+      println("Product format, protobuffer")
+      implicit val personFormat = productFormat2(Person.apply)("name", "age")(PresentationName("Person"))
+
+      val bobData = shelf.transact(implicit txn => {
+        val bob = Person(Box("Bob"), Box(34))
+
+        val bos = new ByteArrayOutputStream()
+        val w = ProtobufTokenWriter(bos)
+        val c = WriteContext(w, txn)
+        Writing.write(bob, c)
+        w.close()
+        bos.toByteArray
+      })
+
+      println("pb serialised to " + bobData.length + " bytes")
+
+      shelf.transact(implicit txn => {
+        val r = ProtobufTokenReader(new ByteArrayInputStream(bobData))
+        val bob2 = Reading.read[Person](new ReadContext(r, txn))
+        println("pb bob2: " + bob2.asString)
+      })
+    }
+
+    {
+      println("Node format use links, json")
+
+      implicit val personNodeFormat = nodeFormat2(Person.apply, Person.default)("name", "age")(PresentationName("Person"), UseLinks)
+
+      val bobJson = shelf.transact(implicit txn => {
+        val bob = Person(Box("Bob"), Box(34))
+
+        val sw = new StringWriter()
+        val w = new JsonTokenWriter(sw)
+        val c = WriteContext(w, txn)
+        Writing.write(bob, c)
+        w.close()
+        sw.toString
+      })
+
+      println("json serialised to:\n" + bobJson)
+
+//      shelf.transact(implicit txn => {
+//        val r = ProtobufTokenReader(new ByteArrayInputStream(bobData))
+//        val bob2 = Reading.read[Person](new ReadContext(r, txn))
+//        println("pb bob2: " + bob2.asString)
+//      })
+    }
+
+    {
+      println("Node format no links, json")
+
+      implicit val personNodeFormat = nodeFormat2(Person.apply, Person.default)("name", "age")(PresentationName("Person"), UseLinks)
+      implicit val jsonStuffNodeFormat = nodeFormat4(JsonStuff.apply, JsonStuff.default)("name", "age", "map", "list")(PresentationName("JsonStuff"), UseLinks)
+
+      val bobJson = shelf.transact(implicit txn => {
+        val alice = Person(Box("Alice"), Box(32))
+        val bob = Person(Box("Bob"), Box(34))
+        val j = JsonStuff(Box("jsonStuff"), Box(24522), Box(Map("a" -> alice, "b" -> bob)), Box(List(1, 2, 3)))
+
+        val sw = new StringWriter()
+        val w = new JsonTokenWriter(sw)
+        val c = WriteContext(w, txn)
+        Writing.write(j, c)
+        w.close()
+        sw.toString
+      })
+
+      println("jsonStuff serialised to:\n" + bobJson)
+
+      //      shelf.transact(implicit txn => {
+      //        val r = ProtobufTokenReader(new ByteArrayInputStream(bobData))
+      //        val bob2 = Reading.read[Person](new ReadContext(r, txn))
+      //        println("pb bob2: " + bob2.asString)
+      //      })
+    }
+
+    {
+      println("Node format no links, json")
+
+      implicit val personNodeFormat = nodeFormat2(Person.apply, Person.default)("name", "age")(PresentationName("Person"))
+
+      val bobJson = shelf.transact(implicit txn => {
+        val bob = Person(Box("Bob"), Box(34))
+
+        val sw = new StringWriter()
+        val w = new JsonTokenWriter(sw)
+        val c = WriteContext(w, txn)
+        Writing.write(bob, c)
+        w.close()
+        sw.toString
+      })
+
+      println("json serialised to:\n" + bobJson)
+
+      //      shelf.transact(implicit txn => {
+      //        val r = ProtobufTokenReader(new ByteArrayInputStream(bobData))
+      //        val bob2 = Reading.read[Person](new ReadContext(r, txn))
+      //        println("pb bob2: " + bob2.asString)
+      //      })
+    }
+
+    {
+      println("Node format, token buffer")
+
       implicit val personNodeFormat = nodeFormat2(Person.apply, Person.default)("name", "age")(PresentationName("Person"))
 
       val bobTokens = shelf.transact(implicit txn => {
