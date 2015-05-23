@@ -1,13 +1,12 @@
 package org.rebeam.boxes.persistence
 
-import java.lang.reflect.Modifier
 
 import scala.collection.mutable.ListBuffer
 
 import boxes.transact.{Txn, Box}
 
 import scala.reflect.ClassTag
-import scala.util.control.NonFatal
+import scala.language.implicitConversions
 
 object PrimFormats {
   implicit val booleanFormat = new Format[Boolean] {
@@ -188,10 +187,10 @@ object CollectionFormats extends LowPriorityCollectionFormats {
           val entries = ListBuffer[(String, V)]()
           while (c.reader.peek != CloseDict) {
             entries.append(c.reader.pull() match {
-              case DictEntry(key, LinkEmpty) => {
+              case DictEntry(key, LinkEmpty) =>
                 val value = reads.read(c)
                 (key, value)
-              }
+
               case _ => throw new IncorrectTokenException("Expected DictEntry(key, LinkEmpty) at start of Map[String, _] entry")
             })
           }
@@ -329,8 +328,7 @@ object BoxFormatsUseLinks {
   }
 }
 
-//FIXME add links for dicts used in ProductFormats and NodeFormats, with a LinkStrategy.
-
+//TODO should this have support for dict links?
 object ProductFormats {
 
   private def writeDictEntry[T :Format](p: Product, name: String, index: Int, c: WriteContext): Unit = {
@@ -430,45 +428,79 @@ object NodeFormats {
     //We accept LinkEmpty, with nothing to do, or LinkId, in which case we putBox in case of any later references.
     //We do NOT accept LinkRef, since we never write one.
     link match {
-      case LinkEmpty => {}                            //No cache stuff to do
+      case LinkEmpty =>                               //No cache stuff to do
       case LinkId(id) => c.reader.putBox(id, box)     //Cache our box for anything using it later in stream
       case LinkRef(id) => throw new IncorrectTokenException("DictEntry must NOT have a LinkRef in a Node Dict, found ref to " + id)
     }
     box.set(implicitly[Format[T]].read(c))
   }
 
-  def nodeFormat2[P1: Format, P2: Format, N <: Product :ClassTag](construct: (Box[P1], Box[P2]) => N, default: (Txn) => N)(name1: String, name2: String)(name: TokenName = NoName, linkStrategy: LinkStrategy = NoLinks) : Format[N] = new Format[N] {
+  private def writeNode[N](n: N, c: WriteContext, name: TokenName, nodeLinkStrategy: LinkStrategy, writeEntriesAndClose: (N, WriteContext) => Unit): Unit = {
+    nodeLinkStrategy match {
+      case UseLinks =>
+        c.writer.cache(n) match {
+          case Cached(id) => c.writer.write(OpenDict(name, LinkRef(id)))
+          case New(id) =>
+            c.writer.write(OpenDict(name, LinkId(id)))
+            writeEntriesAndClose(n, c)
+        }
 
-    def write(n: N, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
-      writeDictEntry[P1](n, name1, 0, c, linkStrategy)
-      writeDictEntry[P2](n, name2, 1, c, linkStrategy)
+      case NoLinks =>
+        c.writer.write(OpenDict(name, LinkEmpty))
+        writeEntriesAndClose(n, c)
+
+      case NoLinksOrDuplicates =>
+        c.writer.cache(n) match {
+          case Cached(id) => throw new NodeCacheException("Node " + n + " was already cached, but nodeLinkStrategy is " + nodeLinkStrategy)
+          case New(id) =>
+            c.writer.write(OpenDict(name, LinkEmpty))
+            writeEntriesAndClose(n, c)
+        }
+    }
+  }
+
+  private def readNode[N](c: ReadContext, readEntriesAndClose: (ReadContext) => N): N = {
+    c.reader.pull() match {
+      case OpenDict(name, LinkEmpty) => readEntriesAndClose(c)
+      case OpenDict(name, LinkRef(id)) => c.reader.getCache(id).asInstanceOf[N]
+      case OpenDict(name, LinkId(id)) =>
+        val n = readEntriesAndClose(c)
+        c.reader.putCache(id, n)
+        n
+
+      case _ => throw new IncorrectTokenException("Expected OpenDict at start of Map[String, _]")
+    }
+  }
+
+  def nodeFormat2[P1: Format, P2: Format, N <: Product :ClassTag](construct: (Box[P1], Box[P2]) => N, default: (Txn) => N)(name1: String, name2: String)(name: TokenName = NoName, boxLinkStrategy: LinkStrategy = NoLinks, nodeLinkStrategy: LinkStrategy = NoLinksOrDuplicates) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
       c.writer.write(CloseDict)
     }
 
-    def read(c: ReadContext): N = {
+    def readEntriesAndClose(c: ReadContext): N = {
       implicit val txn = c.txn
-      c.reader.pull() match {
-        case OpenDict(_, _) =>
-          val n = default(txn)
+      val n = default(txn)
 
-          while (c.reader.peek != CloseDict) {
-            c.reader.pull() match {
-              case DictEntry(fieldName, link) => fieldName match {
-                case s if s == name1 => useDictEntry[P1](n, 0, c, link)
-                case s if s == name2 => useDictEntry[P2](n, 1, c, link)
-                case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
-              }
-              case x: Token => throw new IncorrectTokenException("Expected only DictEntry's in a Node Dict, got " + x)
-            }
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
           }
-
-          c.reader.pullAndAssertEquals(CloseDict)
-          n
-
-        case _ => throw new IncorrectTokenException("Expected OpenDict at start of Map[String, _]")
+          case x: Token => throw new IncorrectTokenException("Expected only DictEntry's in a Node Dict, got " + x)
+        }
       }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
     }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 

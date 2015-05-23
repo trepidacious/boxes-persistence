@@ -1,8 +1,9 @@
+package org.rebeam.boxes.persistence
+
 import java.io.{StringWriter, ByteArrayInputStream, ByteArrayOutputStream}
 
 import boxes.transact.{TxnR, Txn, Box, ShelfDefault}
-import org.rebeam.boxes.persistence._
-import shapeless.Generic
+
 
 case class Person(name: Box[String], age: Box[Int]) {
   def asString(implicit txn: TxnR) = "Person(" + name() + ", " + age() + ")"

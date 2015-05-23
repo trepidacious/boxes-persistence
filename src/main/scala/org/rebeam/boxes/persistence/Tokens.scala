@@ -4,6 +4,7 @@ import boxes.transact.{Box, Txn, TxnR}
 
 import annotation.implicitNotFound
 import scala.collection._
+import scala.language.implicitConversions
 
 sealed trait Token
 
@@ -58,8 +59,11 @@ case object LinkEmpty extends Link
 
 /**
  * Open a dictionary, which is a map from Strings to arbitrary values
- * Must be followed by none or more pairs of (DictEntry, encoded value as tokens), then a CloseDict.
+ * Must be followed by none or more pairs of (DictEntry, encoded value as tokens), then a CloseDict, unless
+ * link is LinkRef(id), in which case no further tokens are necessary, and the Dict is taken to be the
+ * same one original defined with LinkId(id).
  * @param name  The name of the dictionary - defaults to NoName
+ * @param link  The link for this dict, defaults to LinkEmpty for a standalone dict with no id or ref.
  */
 case class OpenDict(name: TokenName = NoName, link: Link = LinkEmpty) extends Token
 
@@ -212,6 +216,8 @@ case class WriteContext(writer: TokenWriter, txn: TxnR)
 class IncorrectTokenException(m: String) extends RuntimeException(m)
 class NoTokenException extends RuntimeException
 class BoxCacheException(m: String) extends RuntimeException(m)
+class NodeCacheException(m: String) extends RuntimeException(m)
+class CacheException(m: String) extends RuntimeException(m)
 
 trait TokenReader {
 
@@ -222,6 +228,16 @@ trait TokenReader {
   def pull(): Token
 
   private val boxCache = new mutable.HashMap[Long, Box[_]]()
+
+  private val cache = new mutable.HashMap[Long, Any]()
+
+  def putCache(id: Long, thing: Any) = cache.put(id, thing) match {
+    case Some(existingThing) => throw new CacheException("Already have a thing " + existingThing + " for id " + id)
+    case _ => {}
+  }
+
+  def getCacheOption(id: Long) = cache.get(id)
+  def getCache(id: Long) = getCacheOption(id).getOrElse(throw new CacheException("No cached thing for id " + id))
 
   def putBox(id: Long, box: Box[_]) {
     if (boxCache.get(id).isDefined) throw new BoxCacheException("Already have a box for id " + id)

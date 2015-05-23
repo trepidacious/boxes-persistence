@@ -16,3 +16,13 @@ libraryDependencies ++= Seq(
   "com.chuusai" %% "shapeless" % "2.1.0",
   "com.google.protobuf" % "protobuf-java" % "2.6.1"
 )
+
+scalacOptions ++= Seq(
+  "-feature",
+  "-deprecation",
+  "-encoding", "UTF-8",
+  "-unchecked",
+  "-Xfatal-warnings",
+  "-Xlint",
+  "-Ywarn-unused-import"
+)
