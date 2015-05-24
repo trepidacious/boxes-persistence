@@ -1,9 +1,8 @@
-package org.rebeam.boxes.persistence
-
+package org.rebeam.boxes.persistence.json
 
 import java.io.Writer
 
-import org.rebeam.boxes.persistence.json.JsonUtils
+import org.rebeam.boxes.persistence._
 
 import scala.collection.mutable.Stack
 

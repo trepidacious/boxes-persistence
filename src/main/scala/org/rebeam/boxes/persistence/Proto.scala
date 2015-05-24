@@ -3,6 +3,8 @@ package org.rebeam.boxes.persistence
 import java.io.{StringWriter, ByteArrayInputStream, ByteArrayOutputStream}
 
 import boxes.transact.{TxnR, Txn, Box, ShelfDefault}
+import org.rebeam.boxes.persistence.json.JsonTokenWriter
+import org.rebeam.boxes.persistence.protobuf.{ProtobufTokenReader, ProtobufTokenWriter}
 
 
 case class Person(name: Box[String], age: Box[Int]) {
@@ -38,6 +40,27 @@ object Proto {
     import BoxFormatsUseLinks._
     import ProductFormats._
     import NodeFormats._
+
+    {
+      println("Product format on list, token buffer, use links for nodes")
+      implicit val personFormat = nodeFormat2(Person.apply, Person.default)("name", "age")(PresentationName("Person"), boxLinkStrategy = NoLinksOrDuplicates, nodeLinkStrategy = UseLinks)
+
+      val bobTokens = shelf.transact(implicit txn => {
+        val bob = Person(Box("Bob"), Box(34))
+
+        val w = new BufferTokenWriter()
+        val c = WriteContext(w, txn)
+        Writing.write(List(bob, bob, bob), c)
+        println(w.tokens)
+        w.tokens
+      })
+
+      shelf.transact(implicit txn => {
+        val r = new BufferTokenReader(bobTokens)
+        val list = Reading.read[List[Person]](new ReadContext(r, txn))
+        println(list.map(_.asString))
+      })
+    }
 
     {
       println("Product format, token buffer")

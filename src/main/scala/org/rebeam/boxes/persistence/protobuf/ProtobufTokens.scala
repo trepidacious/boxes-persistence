@@ -1,10 +1,10 @@
-package org.rebeam.boxes.persistence
+package org.rebeam.boxes.persistence.protobuf
 
-import com.google.protobuf.CodedOutputStream
-import java.io.OutputStream
-import com.google.protobuf.CodedInputStream
-import java.io.IOException
-import java.io.InputStream
+import org.rebeam.boxes.persistence._
+
+import java.io.{IOException, InputStream, OutputStream}
+
+import com.google.protobuf.{CodedInputStream, CodedOutputStream}
 
 object ProtobufTokens {
 

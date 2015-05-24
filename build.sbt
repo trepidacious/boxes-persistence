@@ -23,6 +23,5 @@ scalacOptions ++= Seq(
   "-encoding", "UTF-8",
   "-unchecked",
   "-Xfatal-warnings",
-  "-Xlint",
-  "-Ywarn-unused-import"
+  "-Xlint"
 )
