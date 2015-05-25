@@ -1,5 +1,6 @@
 package org.rebeam.boxes.persistence.protobuf
 
+import boxes.transact.TxnR
 import org.rebeam.boxes.persistence._
 
 import java.io.{IOException, InputStream, OutputStream}
@@ -41,10 +42,10 @@ object ProtobufTokenWriter {
 }
 
 object ProtobufTokenReader{
-  def apply(is: InputStream) = new ProtobufTokenReader(CodedInputStream.newInstance(is))
+  def apply(is: InputStream) = new ProtobufTokenReader(CodedInputStream.newInstance(is), () => is.close())
 }
 
-class ProtobufTokenReader(is: CodedInputStream) extends TokenReader {
+class ProtobufTokenReader(is: CodedInputStream, onClose: => Unit) extends TokenReader {
 
   private var nextToken: Option[Token] = None
 
@@ -95,9 +96,11 @@ class ProtobufTokenReader(is: CodedInputStream) extends TokenReader {
 
       case ProtobufTokens.noneToken => NoneToken
 
-      case _ => throw new IOException("Invalid token type")
+      case x => throw new IOException("Invalid token type " + x)
     }
   }
+
+  def close() = onClose
 }
 
 class ProtobufTokenWriter(os: CodedOutputStream, onClose: => Unit) extends TokenWriter {
@@ -164,8 +167,8 @@ class ProtobufTokenWriter(os: CodedOutputStream, onClose: => Unit) extends Token
         os.writeStringNoTag(p)
 
       case OpenArr(name) =>
-        writeName(name)
         os.writeRawVarint32(openArr)
+        writeName(name)
 
       case CloseArr => os.writeRawVarint32(closeArr)
 
@@ -174,7 +177,6 @@ class ProtobufTokenWriter(os: CodedOutputStream, onClose: => Unit) extends Token
         writeLink(link)
 
       case NoneToken => os.writeRawVarint32(noneToken)
-
     }
   }
 
@@ -182,5 +184,11 @@ class ProtobufTokenWriter(os: CodedOutputStream, onClose: => Unit) extends Token
     os.flush()
     onClose
   }
-
 }
+
+object ProtobufReaderWriterFactory extends ReaderWriterFactory {
+  def reader(input:InputStream) = ProtobufTokenReader(input)
+  def writer(output:OutputStream) = ProtobufTokenWriter(output)
+}
+
+object ProtobufIO extends IO(ProtobufReaderWriterFactory)

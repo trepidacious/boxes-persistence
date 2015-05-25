@@ -6,6 +6,7 @@ class BufferTokenWriter extends TokenWriter {
   private val buffer = ListBuffer[Token]()
   override def write(t: Token) = buffer.append(t)
   def tokens = buffer.toList
+  def close() {}
 }
 
 class BufferTokenReader(tokens: List[Token]) extends TokenReader {
@@ -17,5 +18,5 @@ class BufferTokenReader(tokens: List[Token]) extends TokenReader {
   } else {
     buffer.remove(0)
   }
+  def close() {}
 }
-

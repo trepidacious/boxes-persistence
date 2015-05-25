@@ -1,6 +1,8 @@
 package org.rebeam.boxes.persistence
 
-import boxes.transact.{Box, Txn, TxnR}
+import java.io.{OutputStream, InputStream}
+
+import boxes.transact._
 
 import annotation.implicitNotFound
 import scala.collection._
@@ -151,12 +153,12 @@ trait TokenWriter {
    */
   def cache(thing:Any):CacheResult = {
     c.get(thing) match {
-      case None => {
+      case None =>
         val id = nextId
         nextId = nextId + 1
         c.put(thing, id)
         New(id)
-      }
+
       case Some(ref) => Cached(ref)
     }
   }
@@ -180,6 +182,7 @@ trait TokenWriter {
    */
   def isBoxCached(id: Long) = cachedBoxIds.contains(id)
 
+  def close(): Unit
 }
 
 /**
@@ -233,7 +236,7 @@ trait TokenReader {
 
   def putCache(id: Long, thing: Any) = cache.put(id, thing) match {
     case Some(existingThing) => throw new CacheException("Already have a thing " + existingThing + " for id " + id)
-    case _ => {}
+    case _ =>
   }
 
   def getCacheOption(id: Long) = cache.get(id)
@@ -245,7 +248,7 @@ trait TokenReader {
   }
 
   def getBox(id: Long): Box[_] = {
-    boxCache.get(id).getOrElse(throw new BoxCacheException("No cached box for id " + id))
+    boxCache.getOrElse(id, throw new BoxCacheException("No cached box for id " + id))
   }
 
   @throws [IncorrectTokenException]
@@ -309,6 +312,7 @@ trait TokenReader {
     }
   }
 
+  def close(): Unit
 }
 
 case class ReadContext(reader: TokenReader, txn: Txn)
@@ -361,4 +365,32 @@ object Writing {
 }
 object Reading {
   def read[T](context: ReadContext)(implicit reads: Reads[T]): T = reads.read(context)
+}
+
+trait ReaderWriterFactory {
+  def reader(input:InputStream): TokenReader
+  def writer(output:OutputStream): TokenWriter
+}
+
+class IO(val factory: ReaderWriterFactory) {
+
+  def write[T: Writes](t: T, output: OutputStream)(implicit txn: TxnR) = {
+    val target = factory.writer(output)
+    val context = WriteContext(target, txn)
+    implicitly[Writes[T]].write(t, context)
+    target.close()
+  }
+
+  def read[T: Reads](input:InputStream)(implicit txn: Txn) = {
+    val source = factory.reader(input)
+    val context = ReadContext(source, txn)
+    val t = implicitly[Reads[T]].read(context)
+    source.close()
+    t
+  }
+
+  def writeNow[T: Writes](t: T, output: OutputStream)(implicit shelf: Shelf) = shelf.read(implicit txn => write(t, output))
+
+  def readNow[T: Reads](input:InputStream)(implicit shelf: Shelf) = shelf.transact(implicit txn => read(input), ReactionBeforeCommit)
+
 }
