@@ -191,28 +191,56 @@ trait TokenWriter {
 sealed trait LinkStrategy
 
 /**
- * Data elements must not be duplicated - they must be found at only one place in the serialised graph. No references are
- * necessary, and so they are not used (LinkEmpty is used for all BoxTokens). When reading data, it is expected to
- * be in this format. This may be useful when reading or writing data from or to systems that do not support references,
- * for example when producing "standard" JSON data. Data with no references or duplicates may also be more predictable
- * and easier to understand.
+ * A subset of LinkStrategies that are suitable for use with strict formats like NodeFormat
  */
-case object NoLinksOrDuplicates extends LinkStrategy
+sealed trait NoDuplicatesLinkStrategy extends LinkStrategy
 
 /**
- * Data elements may be duplicated - they may occur in more than one place in the serialised graph. Where this occurs,
- * they will be written without links (LinkEmpty is always used), and so when deserialised they will become different
- * data elements. This is not normally what is intended.
+ * When writing tokens, only LinkEmpty links are used, and as a result "mutable" data elements must not be duplicated -
+ * there must be no two elements in different positions in the serialised graph that are mutable and equal to
+ * each other ("mutable" elements are Boxes and anything that is serialised with Boxes, e.g. using NodeFormats, and such
+ * elements implement equality by identicality. Note that these elements are not actually mutable, but resolve to
+ * different values in different Revisions. In addition, Nodes may register Reactions when created, and so we do
+ * not wish to have duplicates.).
+ *
+ * Immutable data may be duplicated (equal elements in different positions in the graph), and will be written to the
+ * token stream in full each time encountered.
+ *
+ * This may be useful when reading or writing data
+ * from or to systems that do not support references, for example when producing "standard" JSON data.
+ * Data with no references or duplicates may also be more predictable and easier to understand.
+ * When reading token data, only LinkEmpty links must be present.
  */
-case object NoLinks extends LinkStrategy
+case object EmptyLinks extends LinkStrategy with NoDuplicatesLinkStrategy
 
 /**
- * Data elements are serialised and deserialised using links, LinkEmpty is never used. This means that where a
- * single box is present at more than one position in the graph, it will be deserialised as a single box in more than
- * one position. This is most suited for data being stored for later reading and use in this library, for example
- * saving data to a file.
+ * When writing tokens, only LinkId links are used, and as a result "mutable" data elements must not be duplicated -
+ * there must be no two elements in different positions in the serialised graph that are mutable and equal to
+ * each other ("mutable" elements are Boxes and anything that is serialised with Boxes, e.g. using NodeFormats, and such
+ * elements implement equality by identicality. Note that these elements are not actually mutable, but resolve to
+ * different values in different Revisions. In addition, Nodes may register Reactions when created, and so we do
+ * not wish to have duplicates.).
+ *
+ * Immutable data may be duplicated (equal elements in different positions in the graph), and will be written to the
+ * token stream in full each time encountered.
+ *
+ * This is useful when identifiers are associated with data, mostly when using
+ * boxes. For example we might wish to send a json representation of the data including an id for each box, so that a
+ * client could then receive updates tagged with an id when those boxes change on the server, and/or request that the
+ * server makes changes to those boxes.
+ * When reading token data, only LinkEmpty links must be present.
  */
-case object UseLinks extends LinkStrategy
+case object IdLinks extends LinkStrategy with NoDuplicatesLinkStrategy
+
+/**
+ * Data elements are serialised and deserialised using LinkId the first time an element is encountered, and LinkRef
+ * each subsequent time that an equal element is encountered. LinkEmpty is never used. This means that where a
+ * single data elementis present at more than one position in the graph, it will be deserialised as a single data
+ * element in more than one position.
+ * This is most suited for data being stored for later reading and use in this library, for example saving data
+ * to a file. This is the only strategy that permits duplicates.
+ */
+case object AllLinks extends LinkStrategy
 
 case class WriteContext(writer: TokenWriter, txn: TxnR)
 

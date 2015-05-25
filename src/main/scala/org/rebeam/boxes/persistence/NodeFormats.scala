@@ -29,7 +29,7 @@ import scala.reflect.ClassTag
  */
 object NodeFormats {
 
-  private def writeDictEntry[T :Format](n: Product, name: String, index: Int, c: WriteContext, linkStrategy: LinkStrategy): Unit = {
+  private def writeDictEntry[T :Format](n: Product, name: String, index: Int, c: WriteContext, linkStrategy: NoDuplicatesLinkStrategy): Unit = {
     implicit val txn = c.txn
 
     val box = n.productElement(index).asInstanceOf[Box[T]]
@@ -45,14 +45,14 @@ object NodeFormats {
     } else {
 
       val link = linkStrategy match {
-        case UseLinks => LinkId(id)
-        case NoLinksOrDuplicates => LinkEmpty
-        case NoLinks => LinkEmpty             //We always enforce no duplicates anyway
+        case IdLinks => LinkId(id)
+        case EmptyLinks => LinkEmpty
       }
 
       //Open an entry for the Box
       c.writer.write(DictEntry(name, link))
 
+      //Cache the box whether we used LinkId or LinkEmpty - we use this to avoid duplicates in either case
       c.writer.cacheBox(id)
       implicitly[Format[T]].write(box.get(), c)
     }
@@ -74,7 +74,7 @@ object NodeFormats {
 
   private def writeNode[N](n: N, c: WriteContext, name: TokenName, nodeLinkStrategy: LinkStrategy, writeEntriesAndClose: (N, WriteContext) => Unit): Unit = {
     nodeLinkStrategy match {
-      case UseLinks =>
+      case AllLinks =>
         c.writer.cache(n) match {
           case Cached(id) => c.writer.write(OpenDict(name, LinkRef(id)))
           case New(id) =>
@@ -82,11 +82,15 @@ object NodeFormats {
             writeEntriesAndClose(n, c)
         }
 
-      case NoLinks =>
-        c.writer.write(OpenDict(name, LinkEmpty))
-        writeEntriesAndClose(n, c)
+      case IdLinks =>
+        c.writer.cache(n) match {
+          case Cached(id) => throw new NodeCacheException("Node " + n + " was already cached, but nodeLinkStrategy is " + nodeLinkStrategy)
+          case New(id) =>
+            c.writer.write(OpenDict(name, LinkId(id)))
+            writeEntriesAndClose(n, c)
+        }
 
-      case NoLinksOrDuplicates =>
+      case EmptyLinks =>
         c.writer.cache(n) match {
           case Cached(id) => throw new NodeCacheException("Node " + n + " was already cached, but nodeLinkStrategy is " + nodeLinkStrategy)
           case New(id) =>
@@ -109,7 +113,7 @@ object NodeFormats {
     }
   }
 
-  def nodeFormat2[P1: Format, P2: Format, N <: Product :ClassTag](construct: (Box[P1], Box[P2]) => N, default: (Txn) => N)(name1: String, name2: String)(name: TokenName = NoName, boxLinkStrategy: LinkStrategy = NoLinks, nodeLinkStrategy: LinkStrategy = NoLinksOrDuplicates) : Format[N] = new Format[N] {
+  def nodeFormat2[P1: Format, P2: Format, N <: Product :ClassTag](construct: (Box[P1], Box[P2]) => N, default: (Txn) => N)(name1: String, name2: String)(name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -141,41 +145,38 @@ object NodeFormats {
 
   }
 
-  def nodeFormat4[P1: Format, P2: Format, P3: Format, P4: Format, N <: Product :ClassTag](construct: (Box[P1], Box[P2], Box[P3], Box[P4]) => N, default: (Txn) => N)(name1: String, name2: String, name3: String, name4: String)(name: TokenName = NoName, linkStrategy: LinkStrategy = NoLinks) : Format[N] = new Format[N] {
+  def nodeFormat4[P1: Format, P2: Format, P3: Format, P4: Format, N <: Product :ClassTag](construct: (Box[P1], Box[P2], Box[P3], Box[P4]) => N, default: (Txn) => N)(name1: String, name2: String, name3: String, name4: String)(name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
-    def write(n: N, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
-      writeDictEntry[P1](n, name1, 0, c, linkStrategy)
-      writeDictEntry[P2](n, name2, 1, c, linkStrategy)
-      writeDictEntry[P3](n, name3, 2, c, linkStrategy)
-      writeDictEntry[P4](n, name4, 3, c, linkStrategy)
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
       c.writer.write(CloseDict)
     }
 
-    def read(c: ReadContext): N = {
+    def readEntriesAndClose(c: ReadContext): N = {
       implicit val txn = c.txn
-      c.reader.pull() match {
-        case OpenDict(_, _) =>
-          val n = default(txn)
+      val n = default(txn)
 
-          while (c.reader.peek != CloseDict) {
-            c.reader.pull() match {
-              case DictEntry(fieldName, link) => fieldName match {
-                case s if s == name1 => useDictEntry[P1](n, 0, c, link)
-                case s if s == name2 => useDictEntry[P2](n, 1, c, link)
-                case s if s == name3 => useDictEntry[P3](n, 2, c, link)
-                case s if s == name4 => useDictEntry[P4](n, 3, c, link)
-                case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
-              }
-              case x: Token => throw new IncorrectTokenException("Expected only DictEntry's in a Node Dict, got " + x)
-            }
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
           }
-
-          c.reader.pullAndAssertEquals(CloseDict)
-          n
-
-        case _ => throw new IncorrectTokenException("Expected OpenDict at start of Map[String, _]")
+          case x: Token => throw new IncorrectTokenException("Expected only DictEntry's in a Node Dict, got " + x)
+        }
       }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
     }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
   }
 }

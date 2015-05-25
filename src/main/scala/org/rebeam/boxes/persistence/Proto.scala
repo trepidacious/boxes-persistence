@@ -37,7 +37,6 @@ object Proto {
 
     import PrimFormats._
     import CollectionFormats._
-    import BoxFormatsUseLinks._
     import ProductFormats._
     import NodeFormats._
 
@@ -59,7 +58,7 @@ object Proto {
       })
 
       println("Product format on list, token buffer, use links for nodes")
-      implicit val personFormat = nodeFormat2(Person.apply, Person.default)("name", "age")(PresentationName("Person"), boxLinkStrategy = NoLinksOrDuplicates, nodeLinkStrategy = UseLinks)
+      implicit val personFormat = nodeFormat2(Person.apply, Person.default)("name", "age")(PresentationName("Person"), boxLinkStrategy = EmptyLinks, nodeLinkStrategy = AllLinks)
 
       val bobTokens = shelf.transact(implicit txn => {
         val bob = Person(Box("Bob"), Box(34))
@@ -80,6 +79,7 @@ object Proto {
 
     {
       println("Product format, token buffer")
+      import BoxFormatsAllLinks._
       implicit val personFormat = productFormat2(Person.apply)("name", "age")(PresentationName("Person"))
 
       val bobTokens = shelf.transact(implicit txn => {
@@ -101,6 +101,7 @@ object Proto {
 
     {
       println("Product format, protobuffer")
+      import BoxFormatsAllLinks._
       implicit val personFormat = productFormat2(Person.apply)("name", "age")(PresentationName("Person"))
 
       val bobData = shelf.transact(implicit txn => {
@@ -126,7 +127,7 @@ object Proto {
     {
       println("Node format use links, json")
 
-      implicit val personNodeFormat = nodeFormat2(Person.apply, Person.default)("name", "age")(PresentationName("Person"), UseLinks)
+      implicit val personNodeFormat = nodeFormat2(Person.apply, Person.default)("name", "age")(PresentationName("Person"), EmptyLinks, AllLinks)
 
       val bobJson = shelf.transact(implicit txn => {
         val bob = Person(Box("Bob"), Box(34))
@@ -151,8 +152,8 @@ object Proto {
     {
       println("Node format no links, json")
 
-      implicit val personNodeFormat = nodeFormat2(Person.apply, Person.default)("name", "age")(PresentationName("Person"), UseLinks)
-      implicit val jsonStuffNodeFormat = nodeFormat4(JsonStuff.apply, JsonStuff.default)("name", "age", "map", "list")(PresentationName("JsonStuff"), UseLinks)
+      implicit val personNodeFormat = nodeFormat2(Person.apply, Person.default)("name", "age")(PresentationName("Person"), EmptyLinks, EmptyLinks)
+      implicit val jsonStuffNodeFormat = nodeFormat4(JsonStuff.apply, JsonStuff.default)("name", "age", "map", "list")(PresentationName("JsonStuff"), EmptyLinks, EmptyLinks)
 
       val bobJson = shelf.transact(implicit txn => {
         val alice = Person(Box("Alice"), Box(32))
@@ -298,7 +299,7 @@ object Proto {
     val bobBox = shelf.create("bob")
 
     {
-      import BoxFormatsUseLinks._
+      import BoxFormatsAllLinks._
 
       val boxTokens = shelf.read(implicit txn => {
 
@@ -316,7 +317,7 @@ object Proto {
     }
 
     {
-      import BoxFormatsNoLinks._
+      import BoxFormatsEmptyLinks._
 
       val boxTokens2 = shelf.read(implicit txn => {
         val w = new BufferTokenWriter()
