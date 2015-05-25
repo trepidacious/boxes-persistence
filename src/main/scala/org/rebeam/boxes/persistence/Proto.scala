@@ -42,6 +42,22 @@ object Proto {
     import NodeFormats._
 
     {
+
+      val list = List(1, 2, 3, 4, 5)
+      val intListTokens = shelf.transact(implicit txn => {
+        val w = new BufferTokenWriter()
+        val c = WriteContext(w, txn)
+        Writing.write(list, c)
+        println(w.tokens)
+        w.tokens
+      })
+
+      shelf.transact(implicit txn => {
+        val r = new BufferTokenReader(intListTokens)
+        val list = Reading.read[List[Int]](new ReadContext(r, txn))
+        println(list)
+      })
+
       println("Product format on list, token buffer, use links for nodes")
       implicit val personFormat = nodeFormat2(Person.apply, Person.default)("name", "age")(PresentationName("Person"), boxLinkStrategy = NoLinksOrDuplicates, nodeLinkStrategy = UseLinks)
 
