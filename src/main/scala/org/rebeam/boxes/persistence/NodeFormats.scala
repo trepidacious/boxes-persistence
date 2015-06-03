@@ -2,8 +2,6 @@ package org.rebeam.boxes.persistence
 
 import boxes.transact.{Txn, Box}
 
-import scala.reflect.ClassTag
-
 /**
  * These formats are very similar to ProductFormats, with the important difference that they expect to read/write
  * case classes (Products) of Boxes, which we call "Nodes" for example case class Person(name: Box[String], age: Box[Int]).
@@ -113,7 +111,7 @@ object NodeFormats {
     }
   }
 
-  def nodeFormat2[P1: Format, P2: Format, N <: Product :ClassTag](construct: (Box[P1], Box[P2]) => N, default: (Txn) => N)(name1: String, name2: String)(name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+  def nodeFormat2[P1: Format, P2: Format, N <: Product](construct: (Box[P1], Box[P2]) => N, default: (Txn) => N)(name1: String, name2: String)(name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -145,7 +143,7 @@ object NodeFormats {
 
   }
 
-  def nodeFormat4[P1: Format, P2: Format, P3: Format, P4: Format, N <: Product :ClassTag](construct: (Box[P1], Box[P2], Box[P3], Box[P4]) => N, default: (Txn) => N)(name1: String, name2: String, name3: String, name4: String)(name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+  def nodeFormat4[P1: Format, P2: Format, P3: Format, P4: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4]) => N, default: (Txn) => N)(name1: String, name2: String, name3: String, name4: String)(name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)

@@ -4,6 +4,7 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
 import boxes.transact.{ShelfDefault, Txn, TxnR, Box}
 import org.rebeam.boxes.persistence.NodeFormats._
+import org.rebeam.boxes.persistence.ProductFormats._
 import org.rebeam.boxes.persistence.PrimFormats._
 import org.rebeam.boxes.persistence.CollectionFormats._
 import org.rebeam.boxes.persistence.protobuf.ProtobufIO
@@ -13,6 +14,8 @@ import org.scalatest.prop.PropertyChecks
 case class Person(name: Box[String], age: Box[Int]) {
   def asString(implicit txn: TxnR) = "Person(" + name() + ", " + age() + ")"
 }
+
+case class CaseClass(s: String, i: Int)
 
 object Person {
   def default(txn: Txn): Person = {
@@ -33,6 +36,16 @@ class ProtobufSpec extends WordSpec with PropertyChecks with ShouldMatchers {
     ProtobufIO.writeNow(list, os)
     val list2 = ProtobufIO.readNow[List[T]](new ByteArrayInputStream(os.toByteArray))
     list shouldBe list2
+  }
+
+  def duplicateCaseClass(c: CaseClass) = {
+    implicit val caseClassFormat = productFormat2(CaseClass.apply)("s", "i")()
+
+    implicit val shelf = ShelfDefault()
+    val os = new ByteArrayOutputStream()
+    ProtobufIO.writeNow(c, os)
+    val c2 = ProtobufIO.readNow[CaseClass](new ByteArrayInputStream(os.toByteArray))
+    c shouldBe c2
   }
 
   def duplicatePerson(name: String, age: Int) = {
@@ -156,6 +169,9 @@ class ProtobufSpec extends WordSpec with PropertyChecks with ShouldMatchers {
       info ("Boxes and nodes with id links")
     }
 
+    "duplicate CaseClass" in  {
+      forAll{(s: String, i: Int) => duplicateCaseClass(CaseClass(s, i))}
+    }
 
   }
 }
