@@ -13,33 +13,23 @@ case class Nested(i: Int, n: Option[Nested])
 
 class ProductFormatsSpec extends WordSpec with PropertyChecks with ShouldMatchers {
 
-  def duplicateCaseClass6(b: Boolean, i: Int, l: Long, f: Float, d: Double, s: String): Unit = {
+  def duplicate[T](t: T, format: Format[T]): Unit = {
+    implicit val f = format
     implicit val shelf = ShelfDefault()
-
-    implicit val caseClassFormat = productFormat6(CaseClass6.apply)("b", "i", "l", "f", "d", "s")
-
-    val c = CaseClass6(b, i, l, f, d, s)
-
-    val writtenTokens = shelf.read(implicit txn => BufferIO.toTokens(c))
-
-    val readC = shelf.transact(implicit txn => BufferIO.fromTokens[CaseClass6](writtenTokens))
-
-    readC shouldBe c
+    val writtenTokens = shelf.read(implicit txn => BufferIO.toTokens(t))
+    val read = shelf.transact(implicit txn => BufferIO.fromTokens[T](writtenTokens))
+    read shouldBe t
   }
 
-  def duplicateCaseClass(s: String, i: Int): Unit ={
-    implicit val shelf = ShelfDefault()
+  def duplicateCaseClass6(b: Boolean, i: Int, l: Long, f: Float, d: Double, s: String): Unit = duplicate(
+    CaseClass6(b, i, l, f, d, s),
+    productFormat6(CaseClass6.apply)("b", "i", "l", "f", "d", "s")
+  )
 
-    implicit val caseClassFormat = productFormat2(CaseClass.apply)("s", "i")
-
-    val c = CaseClass(s, i)
-
-    val writtenTokens = shelf.read(implicit txn => BufferIO.toTokens(c))
-
-    val readC = shelf.transact(implicit txn => BufferIO.fromTokens[CaseClass](writtenTokens))
-
-    readC shouldBe c
-  }
+  def duplicateCaseClass(s: String, i: Int): Unit = duplicate(
+    CaseClass(s, i),
+    productFormat2(CaseClass.apply)("s", "i")
+  )
 
   "ProductFormats" should {
 
@@ -48,9 +38,6 @@ class ProductFormatsSpec extends WordSpec with PropertyChecks with ShouldMatcher
     "duplicate arbitrary case class" in forAll { (s: String, i: Int) => duplicateCaseClass(s, i) }
 
     "duplicate nested case class" in {
-
-      implicit val shelf = ShelfDefault()
-
       //TODO why do we need lazy val as well as lazyFormat? spray-json readme doesn't include it:
       // https://github.com/spray/spray-json
       //However similar examples in argonaut do use implicit lazy vals for formats:
@@ -59,13 +46,10 @@ class ProductFormatsSpec extends WordSpec with PropertyChecks with ShouldMatcher
       //but otherwise we have a bit of a catch 22 ;)
       implicit lazy val nestedFormat: Format[Nested] = lazyFormat(productFormat2(Nested.apply)("i", "n"))
 
-      val n = Nested(0, Some(Nested(1, Some(Nested(2, None)))))
-
-      val writtenTokens = shelf.read(implicit txn => BufferIO.toTokens(n))
-
-      val readN = shelf.transact(implicit txn => BufferIO.fromTokens[Nested](writtenTokens))
-
-      readN shouldBe n
+      duplicate(
+        Nested(0, Some(Nested(1, Some(Nested(2, None))))),
+        nestedFormat
+      )
     }
 
     "read out of order fields" in {
