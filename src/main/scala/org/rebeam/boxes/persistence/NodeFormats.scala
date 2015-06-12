@@ -111,7 +111,43 @@ object NodeFormats {
     }
   }
 
-  def nodeFormat2[P1: Format, P2: Format, N <: Product](construct: (Box[P1], Box[P2]) => N, default: (Txn) => N)(name1: String, name2: String)(name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+  def nodeFormat1[P1: Format, N <: Product](construct: (Box[P1]) => N, default: (Txn) => N)
+                                           (name1: String)
+                                           (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat2[P1: Format, P2: Format, N <: Product](construct: (Box[P1], Box[P2]) => N, default: (Txn) => N)
+                                                       (name1: String, name2: String)
+                                                       (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -130,7 +166,7 @@ object NodeFormats {
             case s if s == name2 => useDictEntry[P2](n, 1, c, link)
             case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
           }
-          case x: Token => throw new IncorrectTokenException("Expected only DictEntry's in a Node Dict, got " + x)
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
         }
       }
 
@@ -143,7 +179,47 @@ object NodeFormats {
 
   }
 
-  def nodeFormat4[P1: Format, P2: Format, P3: Format, P4: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4]) => N, default: (Txn) => N)(name1: String, name2: String, name3: String, name4: String)(name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+  def nodeFormat3[P1: Format, P2: Format, P3: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3]) => N, default: (Txn) => N)
+                                                                   (name1: String, name2: String, name3: String)
+                                                                   (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat4[P1: Format, P2: Format, P3: Format, P4: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4]) => N, default: (Txn) => N)
+                                                                               (name1: String, name2: String, name3: String, name4: String)
+                                                                               (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -166,7 +242,7 @@ object NodeFormats {
             case s if s == name4 => useDictEntry[P4](n, 3, c, link)
             case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
           }
-          case x: Token => throw new IncorrectTokenException("Expected only DictEntry's in a Node Dict, got " + x)
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
         }
       }
 
@@ -176,5 +252,1052 @@ object NodeFormats {
 
     def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
   }
+
+
+  def nodeFormat5[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5]) => N, default: (Txn) => N)
+                                                                                           (name1: String, name2: String, name3: String, name4: String, name5: String)
+                                                                                           (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat6[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6]) => N, default: (Txn) => N)
+                                                                                                       (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String)
+                                                                                                       (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat7[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7]) => N, default: (Txn) => N)
+                                                                                                                   (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String)
+                                                                                                                   (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      writeDictEntry[P7](n, name7, 6, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case s if s == name7 => useDictEntry[P7](n, 6, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat8[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8]) => N, default: (Txn) => N)
+                                                                                                                               (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String)
+                                                                                                                               (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      writeDictEntry[P7](n, name7, 6, c, boxLinkStrategy)
+      writeDictEntry[P8](n, name8, 7, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case s if s == name7 => useDictEntry[P7](n, 6, c, link)
+            case s if s == name8 => useDictEntry[P8](n, 7, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat9[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9]) => N, default: (Txn) => N)
+                                                                                                                                           (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String)
+                                                                                                                                           (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      writeDictEntry[P7](n, name7, 6, c, boxLinkStrategy)
+      writeDictEntry[P8](n, name8, 7, c, boxLinkStrategy)
+      writeDictEntry[P9](n, name9, 8, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case s if s == name7 => useDictEntry[P7](n, 6, c, link)
+            case s if s == name8 => useDictEntry[P8](n, 7, c, link)
+            case s if s == name9 => useDictEntry[P9](n, 8, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat10[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10]) => N, default: (Txn) => N)
+                                                                                                                                                         (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String)
+                                                                                                                                                         (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      writeDictEntry[P7](n, name7, 6, c, boxLinkStrategy)
+      writeDictEntry[P8](n, name8, 7, c, boxLinkStrategy)
+      writeDictEntry[P9](n, name9, 8, c, boxLinkStrategy)
+      writeDictEntry[P10](n, name10, 9, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case s if s == name7 => useDictEntry[P7](n, 6, c, link)
+            case s if s == name8 => useDictEntry[P8](n, 7, c, link)
+            case s if s == name9 => useDictEntry[P9](n, 8, c, link)
+            case s if s == name10 => useDictEntry[P10](n, 9, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat11[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11]) => N, default: (Txn) => N)
+                                                                                                                                                                      (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String)
+                                                                                                                                                                      (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      writeDictEntry[P7](n, name7, 6, c, boxLinkStrategy)
+      writeDictEntry[P8](n, name8, 7, c, boxLinkStrategy)
+      writeDictEntry[P9](n, name9, 8, c, boxLinkStrategy)
+      writeDictEntry[P10](n, name10, 9, c, boxLinkStrategy)
+      writeDictEntry[P11](n, name11, 10, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case s if s == name7 => useDictEntry[P7](n, 6, c, link)
+            case s if s == name8 => useDictEntry[P8](n, 7, c, link)
+            case s if s == name9 => useDictEntry[P9](n, 8, c, link)
+            case s if s == name10 => useDictEntry[P10](n, 9, c, link)
+            case s if s == name11 => useDictEntry[P11](n, 10, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat12[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12]) => N, default: (Txn) => N)
+                                                                                                                                                                                   (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String)
+                                                                                                                                                                                   (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      writeDictEntry[P7](n, name7, 6, c, boxLinkStrategy)
+      writeDictEntry[P8](n, name8, 7, c, boxLinkStrategy)
+      writeDictEntry[P9](n, name9, 8, c, boxLinkStrategy)
+      writeDictEntry[P10](n, name10, 9, c, boxLinkStrategy)
+      writeDictEntry[P11](n, name11, 10, c, boxLinkStrategy)
+      writeDictEntry[P12](n, name12, 11, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case s if s == name7 => useDictEntry[P7](n, 6, c, link)
+            case s if s == name8 => useDictEntry[P8](n, 7, c, link)
+            case s if s == name9 => useDictEntry[P9](n, 8, c, link)
+            case s if s == name10 => useDictEntry[P10](n, 9, c, link)
+            case s if s == name11 => useDictEntry[P11](n, 10, c, link)
+            case s if s == name12 => useDictEntry[P12](n, 11, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat13[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13]) => N, default: (Txn) => N)
+                                                                                                                                                                                                (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String)
+                                                                                                                                                                                                (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      writeDictEntry[P7](n, name7, 6, c, boxLinkStrategy)
+      writeDictEntry[P8](n, name8, 7, c, boxLinkStrategy)
+      writeDictEntry[P9](n, name9, 8, c, boxLinkStrategy)
+      writeDictEntry[P10](n, name10, 9, c, boxLinkStrategy)
+      writeDictEntry[P11](n, name11, 10, c, boxLinkStrategy)
+      writeDictEntry[P12](n, name12, 11, c, boxLinkStrategy)
+      writeDictEntry[P13](n, name13, 12, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case s if s == name7 => useDictEntry[P7](n, 6, c, link)
+            case s if s == name8 => useDictEntry[P8](n, 7, c, link)
+            case s if s == name9 => useDictEntry[P9](n, 8, c, link)
+            case s if s == name10 => useDictEntry[P10](n, 9, c, link)
+            case s if s == name11 => useDictEntry[P11](n, 10, c, link)
+            case s if s == name12 => useDictEntry[P12](n, 11, c, link)
+            case s if s == name13 => useDictEntry[P13](n, 12, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat14[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14]) => N, default: (Txn) => N)
+                                                                                                                                                                                                             (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String)
+                                                                                                                                                                                                             (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      writeDictEntry[P7](n, name7, 6, c, boxLinkStrategy)
+      writeDictEntry[P8](n, name8, 7, c, boxLinkStrategy)
+      writeDictEntry[P9](n, name9, 8, c, boxLinkStrategy)
+      writeDictEntry[P10](n, name10, 9, c, boxLinkStrategy)
+      writeDictEntry[P11](n, name11, 10, c, boxLinkStrategy)
+      writeDictEntry[P12](n, name12, 11, c, boxLinkStrategy)
+      writeDictEntry[P13](n, name13, 12, c, boxLinkStrategy)
+      writeDictEntry[P14](n, name14, 13, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case s if s == name7 => useDictEntry[P7](n, 6, c, link)
+            case s if s == name8 => useDictEntry[P8](n, 7, c, link)
+            case s if s == name9 => useDictEntry[P9](n, 8, c, link)
+            case s if s == name10 => useDictEntry[P10](n, 9, c, link)
+            case s if s == name11 => useDictEntry[P11](n, 10, c, link)
+            case s if s == name12 => useDictEntry[P12](n, 11, c, link)
+            case s if s == name13 => useDictEntry[P13](n, 12, c, link)
+            case s if s == name14 => useDictEntry[P14](n, 13, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat15[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14], Box[P15]) => N, default: (Txn) => N)
+                                                                                                                                                                                                                          (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String)
+                                                                                                                                                                                                                          (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      writeDictEntry[P7](n, name7, 6, c, boxLinkStrategy)
+      writeDictEntry[P8](n, name8, 7, c, boxLinkStrategy)
+      writeDictEntry[P9](n, name9, 8, c, boxLinkStrategy)
+      writeDictEntry[P10](n, name10, 9, c, boxLinkStrategy)
+      writeDictEntry[P11](n, name11, 10, c, boxLinkStrategy)
+      writeDictEntry[P12](n, name12, 11, c, boxLinkStrategy)
+      writeDictEntry[P13](n, name13, 12, c, boxLinkStrategy)
+      writeDictEntry[P14](n, name14, 13, c, boxLinkStrategy)
+      writeDictEntry[P15](n, name15, 14, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case s if s == name7 => useDictEntry[P7](n, 6, c, link)
+            case s if s == name8 => useDictEntry[P8](n, 7, c, link)
+            case s if s == name9 => useDictEntry[P9](n, 8, c, link)
+            case s if s == name10 => useDictEntry[P10](n, 9, c, link)
+            case s if s == name11 => useDictEntry[P11](n, 10, c, link)
+            case s if s == name12 => useDictEntry[P12](n, 11, c, link)
+            case s if s == name13 => useDictEntry[P13](n, 12, c, link)
+            case s if s == name14 => useDictEntry[P14](n, 13, c, link)
+            case s if s == name15 => useDictEntry[P15](n, 14, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat16[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14], Box[P15], Box[P16]) => N, default: (Txn) => N)
+                                                                                                                                                                                                                                       (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String)
+                                                                                                                                                                                                                                       (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      writeDictEntry[P7](n, name7, 6, c, boxLinkStrategy)
+      writeDictEntry[P8](n, name8, 7, c, boxLinkStrategy)
+      writeDictEntry[P9](n, name9, 8, c, boxLinkStrategy)
+      writeDictEntry[P10](n, name10, 9, c, boxLinkStrategy)
+      writeDictEntry[P11](n, name11, 10, c, boxLinkStrategy)
+      writeDictEntry[P12](n, name12, 11, c, boxLinkStrategy)
+      writeDictEntry[P13](n, name13, 12, c, boxLinkStrategy)
+      writeDictEntry[P14](n, name14, 13, c, boxLinkStrategy)
+      writeDictEntry[P15](n, name15, 14, c, boxLinkStrategy)
+      writeDictEntry[P16](n, name16, 15, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case s if s == name7 => useDictEntry[P7](n, 6, c, link)
+            case s if s == name8 => useDictEntry[P8](n, 7, c, link)
+            case s if s == name9 => useDictEntry[P9](n, 8, c, link)
+            case s if s == name10 => useDictEntry[P10](n, 9, c, link)
+            case s if s == name11 => useDictEntry[P11](n, 10, c, link)
+            case s if s == name12 => useDictEntry[P12](n, 11, c, link)
+            case s if s == name13 => useDictEntry[P13](n, 12, c, link)
+            case s if s == name14 => useDictEntry[P14](n, 13, c, link)
+            case s if s == name15 => useDictEntry[P15](n, 14, c, link)
+            case s if s == name16 => useDictEntry[P16](n, 15, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat17[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14], Box[P15], Box[P16], Box[P17]) => N, default: (Txn) => N)
+                                                                                                                                                                                                                                                    (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String)
+                                                                                                                                                                                                                                                    (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      writeDictEntry[P7](n, name7, 6, c, boxLinkStrategy)
+      writeDictEntry[P8](n, name8, 7, c, boxLinkStrategy)
+      writeDictEntry[P9](n, name9, 8, c, boxLinkStrategy)
+      writeDictEntry[P10](n, name10, 9, c, boxLinkStrategy)
+      writeDictEntry[P11](n, name11, 10, c, boxLinkStrategy)
+      writeDictEntry[P12](n, name12, 11, c, boxLinkStrategy)
+      writeDictEntry[P13](n, name13, 12, c, boxLinkStrategy)
+      writeDictEntry[P14](n, name14, 13, c, boxLinkStrategy)
+      writeDictEntry[P15](n, name15, 14, c, boxLinkStrategy)
+      writeDictEntry[P16](n, name16, 15, c, boxLinkStrategy)
+      writeDictEntry[P17](n, name17, 16, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case s if s == name7 => useDictEntry[P7](n, 6, c, link)
+            case s if s == name8 => useDictEntry[P8](n, 7, c, link)
+            case s if s == name9 => useDictEntry[P9](n, 8, c, link)
+            case s if s == name10 => useDictEntry[P10](n, 9, c, link)
+            case s if s == name11 => useDictEntry[P11](n, 10, c, link)
+            case s if s == name12 => useDictEntry[P12](n, 11, c, link)
+            case s if s == name13 => useDictEntry[P13](n, 12, c, link)
+            case s if s == name14 => useDictEntry[P14](n, 13, c, link)
+            case s if s == name15 => useDictEntry[P15](n, 14, c, link)
+            case s if s == name16 => useDictEntry[P16](n, 15, c, link)
+            case s if s == name17 => useDictEntry[P17](n, 16, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat18[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, P18: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14], Box[P15], Box[P16], Box[P17], Box[P18]) => N, default: (Txn) => N)
+                                                                                                                                                                                                                                                                 (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String)
+                                                                                                                                                                                                                                                                 (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      writeDictEntry[P7](n, name7, 6, c, boxLinkStrategy)
+      writeDictEntry[P8](n, name8, 7, c, boxLinkStrategy)
+      writeDictEntry[P9](n, name9, 8, c, boxLinkStrategy)
+      writeDictEntry[P10](n, name10, 9, c, boxLinkStrategy)
+      writeDictEntry[P11](n, name11, 10, c, boxLinkStrategy)
+      writeDictEntry[P12](n, name12, 11, c, boxLinkStrategy)
+      writeDictEntry[P13](n, name13, 12, c, boxLinkStrategy)
+      writeDictEntry[P14](n, name14, 13, c, boxLinkStrategy)
+      writeDictEntry[P15](n, name15, 14, c, boxLinkStrategy)
+      writeDictEntry[P16](n, name16, 15, c, boxLinkStrategy)
+      writeDictEntry[P17](n, name17, 16, c, boxLinkStrategy)
+      writeDictEntry[P18](n, name18, 17, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case s if s == name7 => useDictEntry[P7](n, 6, c, link)
+            case s if s == name8 => useDictEntry[P8](n, 7, c, link)
+            case s if s == name9 => useDictEntry[P9](n, 8, c, link)
+            case s if s == name10 => useDictEntry[P10](n, 9, c, link)
+            case s if s == name11 => useDictEntry[P11](n, 10, c, link)
+            case s if s == name12 => useDictEntry[P12](n, 11, c, link)
+            case s if s == name13 => useDictEntry[P13](n, 12, c, link)
+            case s if s == name14 => useDictEntry[P14](n, 13, c, link)
+            case s if s == name15 => useDictEntry[P15](n, 14, c, link)
+            case s if s == name16 => useDictEntry[P16](n, 15, c, link)
+            case s if s == name17 => useDictEntry[P17](n, 16, c, link)
+            case s if s == name18 => useDictEntry[P18](n, 17, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat19[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, P18: Format, P19: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14], Box[P15], Box[P16], Box[P17], Box[P18], Box[P19]) => N, default: (Txn) => N)
+                                                                                                                                                                                                                                                                              (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String)
+                                                                                                                                                                                                                                                                              (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      writeDictEntry[P7](n, name7, 6, c, boxLinkStrategy)
+      writeDictEntry[P8](n, name8, 7, c, boxLinkStrategy)
+      writeDictEntry[P9](n, name9, 8, c, boxLinkStrategy)
+      writeDictEntry[P10](n, name10, 9, c, boxLinkStrategy)
+      writeDictEntry[P11](n, name11, 10, c, boxLinkStrategy)
+      writeDictEntry[P12](n, name12, 11, c, boxLinkStrategy)
+      writeDictEntry[P13](n, name13, 12, c, boxLinkStrategy)
+      writeDictEntry[P14](n, name14, 13, c, boxLinkStrategy)
+      writeDictEntry[P15](n, name15, 14, c, boxLinkStrategy)
+      writeDictEntry[P16](n, name16, 15, c, boxLinkStrategy)
+      writeDictEntry[P17](n, name17, 16, c, boxLinkStrategy)
+      writeDictEntry[P18](n, name18, 17, c, boxLinkStrategy)
+      writeDictEntry[P19](n, name19, 18, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case s if s == name7 => useDictEntry[P7](n, 6, c, link)
+            case s if s == name8 => useDictEntry[P8](n, 7, c, link)
+            case s if s == name9 => useDictEntry[P9](n, 8, c, link)
+            case s if s == name10 => useDictEntry[P10](n, 9, c, link)
+            case s if s == name11 => useDictEntry[P11](n, 10, c, link)
+            case s if s == name12 => useDictEntry[P12](n, 11, c, link)
+            case s if s == name13 => useDictEntry[P13](n, 12, c, link)
+            case s if s == name14 => useDictEntry[P14](n, 13, c, link)
+            case s if s == name15 => useDictEntry[P15](n, 14, c, link)
+            case s if s == name16 => useDictEntry[P16](n, 15, c, link)
+            case s if s == name17 => useDictEntry[P17](n, 16, c, link)
+            case s if s == name18 => useDictEntry[P18](n, 17, c, link)
+            case s if s == name19 => useDictEntry[P19](n, 18, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat20[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, P18: Format, P19: Format, P20: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14], Box[P15], Box[P16], Box[P17], Box[P18], Box[P19], Box[P20]) => N, default: (Txn) => N)
+                                                                                                                                                                                                                                                                                           (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String, name20: String)
+                                                                                                                                                                                                                                                                                           (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      writeDictEntry[P7](n, name7, 6, c, boxLinkStrategy)
+      writeDictEntry[P8](n, name8, 7, c, boxLinkStrategy)
+      writeDictEntry[P9](n, name9, 8, c, boxLinkStrategy)
+      writeDictEntry[P10](n, name10, 9, c, boxLinkStrategy)
+      writeDictEntry[P11](n, name11, 10, c, boxLinkStrategy)
+      writeDictEntry[P12](n, name12, 11, c, boxLinkStrategy)
+      writeDictEntry[P13](n, name13, 12, c, boxLinkStrategy)
+      writeDictEntry[P14](n, name14, 13, c, boxLinkStrategy)
+      writeDictEntry[P15](n, name15, 14, c, boxLinkStrategy)
+      writeDictEntry[P16](n, name16, 15, c, boxLinkStrategy)
+      writeDictEntry[P17](n, name17, 16, c, boxLinkStrategy)
+      writeDictEntry[P18](n, name18, 17, c, boxLinkStrategy)
+      writeDictEntry[P19](n, name19, 18, c, boxLinkStrategy)
+      writeDictEntry[P20](n, name20, 19, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case s if s == name7 => useDictEntry[P7](n, 6, c, link)
+            case s if s == name8 => useDictEntry[P8](n, 7, c, link)
+            case s if s == name9 => useDictEntry[P9](n, 8, c, link)
+            case s if s == name10 => useDictEntry[P10](n, 9, c, link)
+            case s if s == name11 => useDictEntry[P11](n, 10, c, link)
+            case s if s == name12 => useDictEntry[P12](n, 11, c, link)
+            case s if s == name13 => useDictEntry[P13](n, 12, c, link)
+            case s if s == name14 => useDictEntry[P14](n, 13, c, link)
+            case s if s == name15 => useDictEntry[P15](n, 14, c, link)
+            case s if s == name16 => useDictEntry[P16](n, 15, c, link)
+            case s if s == name17 => useDictEntry[P17](n, 16, c, link)
+            case s if s == name18 => useDictEntry[P18](n, 17, c, link)
+            case s if s == name19 => useDictEntry[P19](n, 18, c, link)
+            case s if s == name20 => useDictEntry[P20](n, 19, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat21[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, P18: Format, P19: Format, P20: Format, P21: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14], Box[P15], Box[P16], Box[P17], Box[P18], Box[P19], Box[P20], Box[P21]) => N, default: (Txn) => N)
+                                                                                                                                                                                                                                                                                                        (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String, name20: String, name21: String)
+                                                                                                                                                                                                                                                                                                        (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      writeDictEntry[P7](n, name7, 6, c, boxLinkStrategy)
+      writeDictEntry[P8](n, name8, 7, c, boxLinkStrategy)
+      writeDictEntry[P9](n, name9, 8, c, boxLinkStrategy)
+      writeDictEntry[P10](n, name10, 9, c, boxLinkStrategy)
+      writeDictEntry[P11](n, name11, 10, c, boxLinkStrategy)
+      writeDictEntry[P12](n, name12, 11, c, boxLinkStrategy)
+      writeDictEntry[P13](n, name13, 12, c, boxLinkStrategy)
+      writeDictEntry[P14](n, name14, 13, c, boxLinkStrategy)
+      writeDictEntry[P15](n, name15, 14, c, boxLinkStrategy)
+      writeDictEntry[P16](n, name16, 15, c, boxLinkStrategy)
+      writeDictEntry[P17](n, name17, 16, c, boxLinkStrategy)
+      writeDictEntry[P18](n, name18, 17, c, boxLinkStrategy)
+      writeDictEntry[P19](n, name19, 18, c, boxLinkStrategy)
+      writeDictEntry[P20](n, name20, 19, c, boxLinkStrategy)
+      writeDictEntry[P21](n, name21, 20, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case s if s == name7 => useDictEntry[P7](n, 6, c, link)
+            case s if s == name8 => useDictEntry[P8](n, 7, c, link)
+            case s if s == name9 => useDictEntry[P9](n, 8, c, link)
+            case s if s == name10 => useDictEntry[P10](n, 9, c, link)
+            case s if s == name11 => useDictEntry[P11](n, 10, c, link)
+            case s if s == name12 => useDictEntry[P12](n, 11, c, link)
+            case s if s == name13 => useDictEntry[P13](n, 12, c, link)
+            case s if s == name14 => useDictEntry[P14](n, 13, c, link)
+            case s if s == name15 => useDictEntry[P15](n, 14, c, link)
+            case s if s == name16 => useDictEntry[P16](n, 15, c, link)
+            case s if s == name17 => useDictEntry[P17](n, 16, c, link)
+            case s if s == name18 => useDictEntry[P18](n, 17, c, link)
+            case s if s == name19 => useDictEntry[P19](n, 18, c, link)
+            case s if s == name20 => useDictEntry[P20](n, 19, c, link)
+            case s if s == name21 => useDictEntry[P21](n, 20, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
+  def nodeFormat22[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, P18: Format, P19: Format, P20: Format, P21: Format, P22: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14], Box[P15], Box[P16], Box[P17], Box[P18], Box[P19], Box[P20], Box[P21], Box[P22]) => N, default: (Txn) => N)
+                                                                                                                                                                                                                                                                                                                     (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String, name20: String, name21: String, name22: String)
+                                                                                                                                                                                                                                                                                                                     (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+
+    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
+      writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
+      writeDictEntry[P2](n, name2, 1, c, boxLinkStrategy)
+      writeDictEntry[P3](n, name3, 2, c, boxLinkStrategy)
+      writeDictEntry[P4](n, name4, 3, c, boxLinkStrategy)
+      writeDictEntry[P5](n, name5, 4, c, boxLinkStrategy)
+      writeDictEntry[P6](n, name6, 5, c, boxLinkStrategy)
+      writeDictEntry[P7](n, name7, 6, c, boxLinkStrategy)
+      writeDictEntry[P8](n, name8, 7, c, boxLinkStrategy)
+      writeDictEntry[P9](n, name9, 8, c, boxLinkStrategy)
+      writeDictEntry[P10](n, name10, 9, c, boxLinkStrategy)
+      writeDictEntry[P11](n, name11, 10, c, boxLinkStrategy)
+      writeDictEntry[P12](n, name12, 11, c, boxLinkStrategy)
+      writeDictEntry[P13](n, name13, 12, c, boxLinkStrategy)
+      writeDictEntry[P14](n, name14, 13, c, boxLinkStrategy)
+      writeDictEntry[P15](n, name15, 14, c, boxLinkStrategy)
+      writeDictEntry[P16](n, name16, 15, c, boxLinkStrategy)
+      writeDictEntry[P17](n, name17, 16, c, boxLinkStrategy)
+      writeDictEntry[P18](n, name18, 17, c, boxLinkStrategy)
+      writeDictEntry[P19](n, name19, 18, c, boxLinkStrategy)
+      writeDictEntry[P20](n, name20, 19, c, boxLinkStrategy)
+      writeDictEntry[P21](n, name21, 20, c, boxLinkStrategy)
+      writeDictEntry[P22](n, name22, 21, c, boxLinkStrategy)
+      c.writer.write(CloseDict)
+    }
+
+    def readEntriesAndClose(c: ReadContext): N = {
+      implicit val txn = c.txn
+      val n = default(txn)
+
+      while (c.reader.peek != CloseDict) {
+        c.reader.pull() match {
+          case DictEntry(fieldName, link) => fieldName match {
+            case s if s == name1 => useDictEntry[P1](n, 0, c, link)
+            case s if s == name2 => useDictEntry[P2](n, 1, c, link)
+            case s if s == name3 => useDictEntry[P3](n, 2, c, link)
+            case s if s == name4 => useDictEntry[P4](n, 3, c, link)
+            case s if s == name5 => useDictEntry[P5](n, 4, c, link)
+            case s if s == name6 => useDictEntry[P6](n, 5, c, link)
+            case s if s == name7 => useDictEntry[P7](n, 6, c, link)
+            case s if s == name8 => useDictEntry[P8](n, 7, c, link)
+            case s if s == name9 => useDictEntry[P9](n, 8, c, link)
+            case s if s == name10 => useDictEntry[P10](n, 9, c, link)
+            case s if s == name11 => useDictEntry[P11](n, 10, c, link)
+            case s if s == name12 => useDictEntry[P12](n, 11, c, link)
+            case s if s == name13 => useDictEntry[P13](n, 12, c, link)
+            case s if s == name14 => useDictEntry[P14](n, 13, c, link)
+            case s if s == name15 => useDictEntry[P15](n, 14, c, link)
+            case s if s == name16 => useDictEntry[P16](n, 15, c, link)
+            case s if s == name17 => useDictEntry[P17](n, 16, c, link)
+            case s if s == name18 => useDictEntry[P18](n, 17, c, link)
+            case s if s == name19 => useDictEntry[P19](n, 18, c, link)
+            case s if s == name20 => useDictEntry[P20](n, 19, c, link)
+            case s if s == name21 => useDictEntry[P21](n, 20, c, link)
+            case s if s == name22 => useDictEntry[P22](n, 21, c, link)
+            case x => throw new IncorrectTokenException("Unknown field name in Node dict " + x)
+          }
+          case x: Token => throw new IncorrectTokenException("Expected DictEntry in a Node Dict, got " + x)
+        }
+      }
+
+      c.reader.pullAndAssertEquals(CloseDict)
+      n
+    }
+
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
+
+  }
+
+
 }

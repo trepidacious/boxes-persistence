@@ -6,11 +6,43 @@ import org.rebeam.boxes.persistence.PrimFormats._
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 
+case class CaseClass6(b: Boolean, i: Int, l: Long, f: Float, d: Double, s: String)
+
 class ProductFormatsSpec extends WordSpec with PropertyChecks with ShouldMatchers {
 
   "ProductFormats" should {
 
-    "read out of order fields" in  {
+    "duplicate case class" in {
+      implicit val shelf = ShelfDefault()
+
+      implicit val caseClassFormat = productFormat2(CaseClass.apply)("s", "i")()
+
+      val c = CaseClass("p", 42)
+
+      val writtenTokens = shelf.read(implicit txn => BufferIO.toTokens(c))
+
+      //Check we can read the tokens canonical order
+      val readC = shelf.transact(implicit txn => BufferIO.fromTokens[CaseClass](writtenTokens))
+
+      readC shouldBe c
+    }
+
+    "duplicate case class of arity 6" in {
+      implicit val shelf = ShelfDefault()
+
+      implicit val caseClassFormat = productFormat6(CaseClass6.apply)("b", "i", "l", "f", "d", "s")()
+
+      val c = CaseClass6(true, 42, 24566, 0.34f, 0.2453d, "string")
+
+      val writtenTokens = shelf.read(implicit txn => BufferIO.toTokens(c))
+
+      //Check we can read the tokens canonical order
+      val readC = shelf.transact(implicit txn => BufferIO.fromTokens[CaseClass6](writtenTokens))
+
+      readC shouldBe c
+    }
+
+    "read out of order fields" in {
       implicit val shelf = ShelfDefault()
 
       implicit val caseClassFormat = productFormat2(CaseClass.apply)("s", "i")()

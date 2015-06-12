@@ -76,7 +76,7 @@ class ProtobufSpec extends WordSpec with PropertyChecks with ShouldMatchers {
     implicit val shelf = ShelfDefault()
 
     //Create two persons with equal contents, but not the same person (not identical),
-    //and a list that contains each one twicw
+    //and a list that contains each one twice
     val list = shelf.transact(implicit txn => {
       val a = makePerson("a", 1)
       val b = makePerson("a", 1)
