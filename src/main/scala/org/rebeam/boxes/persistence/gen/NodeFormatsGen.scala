@@ -34,8 +34,8 @@ object NodeFormatsGen {
 
     s"""
       |  def nodeFormat$fieldCount[$fieldTypes, N <: Product](construct: ($constructorParameters) => N, default: (Txn) => N)
-      |      ($productNameParameters)
-      |      (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+      |      ($productNameParameters,
+      |      nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
       |
       |    def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       |      $writeDictEntries
@@ -60,7 +60,7 @@ object NodeFormatsGen {
       |      n
       |    }
       |
-      |    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+      |    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
       |    def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
       |
       |  }

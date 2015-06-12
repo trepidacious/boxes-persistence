@@ -39,7 +39,7 @@ class ProtobufSpec extends WordSpec with PropertyChecks with ShouldMatchers {
   }
 
   def duplicateCaseClass(c: CaseClass) = {
-    implicit val caseClassFormat = productFormat2(CaseClass.apply)("s", "i")()
+    implicit val caseClassFormat = productFormat2(CaseClass.apply)("s", "i")
 
     implicit val shelf = ShelfDefault()
     val os = new ByteArrayOutputStream()
@@ -50,7 +50,7 @@ class ProtobufSpec extends WordSpec with PropertyChecks with ShouldMatchers {
 
   def duplicatePerson(name: String, age: Int) = {
     implicit val shelf = ShelfDefault()
-    implicit val personFormat = nodeFormat2(Person.apply, Person.default)("name", "age")(PresentationName("Person"), boxLinkStrategy = EmptyLinks, nodeLinkStrategy = AllLinks)
+    implicit val personFormat = nodeFormat2(Person.apply, Person.default)("name", "age", nodeName = PresentationName("Person"), boxLinkStrategy = EmptyLinks, nodeLinkStrategy = AllLinks)
 
     val bob = shelf.transact(implicit txn => makePerson(name, age))
 
@@ -71,7 +71,7 @@ class ProtobufSpec extends WordSpec with PropertyChecks with ShouldMatchers {
   }
 
   def duplicateIdenticalPersonList(boxLinkStrategy: NoDuplicatesLinkStrategy, nodeLinkStrategy: LinkStrategy) = {
-    implicit val personFormat = nodeFormat2(Person.apply, Person.default)("name", "age")(PresentationName("Person"), boxLinkStrategy, nodeLinkStrategy)
+    implicit val personFormat = nodeFormat2(Person.apply, Person.default)("name", "age", nodeName = PresentationName("Person"), boxLinkStrategy, nodeLinkStrategy)
 
     implicit val shelf = ShelfDefault()
 
@@ -84,9 +84,9 @@ class ProtobufSpec extends WordSpec with PropertyChecks with ShouldMatchers {
     })
 
     //Check that each a is equal to the other a, and that a is not equal to b
-    list(0) should be (list(1))
+    list.head should be (list(1))
     list(2) should be (list(3))
-    list(0) should not be list(2)
+    list.head should not be list(2)
     list(1) should not be list(3)
 
     val os = new ByteArrayOutputStream()
@@ -96,11 +96,11 @@ class ProtobufSpec extends WordSpec with PropertyChecks with ShouldMatchers {
     //positions and last two positions, but they are not equal to each other, or the corresponding
     //Persons in the original array
     val list2 = ProtobufIO.readNow[List[Person]](new ByteArrayInputStream(os.toByteArray))
-    list2(0) should be (list2(1))
+    list2.head should be (list2(1))
     list2(2) should be (list2(3))
-    list2(0) should not be list2(2)
+    list2.head should not be list2(2)
     list2(1) should not be list2(3)
-    list(0) should not be list2(0)
+    list.head should not be list2.head
     list(1) should not be list2(1)
     list(2) should not be list2(2)
     list(3) should not be list2(3)
@@ -111,7 +111,7 @@ class ProtobufSpec extends WordSpec with PropertyChecks with ShouldMatchers {
     "duplicate Person" in duplicatePerson("bob", 34)
 
     "duplicate List[Person]" in {
-      implicit val personFormat = nodeFormat2(Person.apply, Person.default)("name", "age")(PresentationName("Person"), boxLinkStrategy = EmptyLinks, nodeLinkStrategy = AllLinks)
+      implicit val personFormat = nodeFormat2(Person.apply, Person.default)("name", "age", nodeName = PresentationName("Person"), boxLinkStrategy = EmptyLinks, nodeLinkStrategy = AllLinks)
       implicit val shelf = ShelfDefault()
       val list = shelf.transact(implicit txn => List(makePerson("a", 1), makePerson("b", 2), makePerson("c", 3), makePerson("d", 4), makePerson("e", 5)))
       val os = new ByteArrayOutputStream()

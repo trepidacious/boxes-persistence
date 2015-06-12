@@ -169,5 +169,4 @@ object CollectionFormats extends LowPriorityCollectionFormats {
     def read(readContext: ReadContext) = readsStringKeyedMap[V].read(readContext)
   }
 
-
 }

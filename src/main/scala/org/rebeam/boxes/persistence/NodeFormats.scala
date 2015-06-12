@@ -112,9 +112,13 @@ object NodeFormats {
   }
 
 
+
+
+
+
   def nodeFormat1[P1: Format, N <: Product](construct: (Box[P1]) => N, default: (Txn) => N)
-                                           (name1: String)
-                                           (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                           (name1: String,
+                                            nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -139,15 +143,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat2[P1: Format, P2: Format, N <: Product](construct: (Box[P1], Box[P2]) => N, default: (Txn) => N)
-                                                       (name1: String, name2: String)
-                                                       (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                       (name1: String, name2: String,
+                                                        nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -174,15 +178,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat3[P1: Format, P2: Format, P3: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3]) => N, default: (Txn) => N)
-                                                                   (name1: String, name2: String, name3: String)
-                                                                   (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                   (name1: String, name2: String, name3: String,
+                                                                    nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -211,15 +215,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat4[P1: Format, P2: Format, P3: Format, P4: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4]) => N, default: (Txn) => N)
-                                                                               (name1: String, name2: String, name3: String, name4: String)
-                                                                               (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                               (name1: String, name2: String, name3: String, name4: String,
+                                                                                nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -250,15 +254,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat5[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5]) => N, default: (Txn) => N)
-                                                                                           (name1: String, name2: String, name3: String, name4: String, name5: String)
-                                                                                           (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                           (name1: String, name2: String, name3: String, name4: String, name5: String,
+                                                                                            nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -291,15 +295,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat6[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6]) => N, default: (Txn) => N)
-                                                                                                       (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String)
-                                                                                                       (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                       (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String,
+                                                                                                        nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -334,15 +338,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat7[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7]) => N, default: (Txn) => N)
-                                                                                                                   (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String)
-                                                                                                                   (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                                   (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String,
+                                                                                                                    nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -379,15 +383,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat8[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8]) => N, default: (Txn) => N)
-                                                                                                                               (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String)
-                                                                                                                               (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                                               (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String,
+                                                                                                                                nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -426,15 +430,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat9[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9]) => N, default: (Txn) => N)
-                                                                                                                                           (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String)
-                                                                                                                                           (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                                                           (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String,
+                                                                                                                                            nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -475,15 +479,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat10[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10]) => N, default: (Txn) => N)
-                                                                                                                                                         (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String)
-                                                                                                                                                         (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                                                                         (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String,
+                                                                                                                                                          nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -526,15 +530,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat11[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11]) => N, default: (Txn) => N)
-                                                                                                                                                                      (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String)
-                                                                                                                                                                      (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                                                                                      (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String,
+                                                                                                                                                                       nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -579,15 +583,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat12[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12]) => N, default: (Txn) => N)
-                                                                                                                                                                                   (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String)
-                                                                                                                                                                                   (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                                                                                                   (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String,
+                                                                                                                                                                                    nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -634,15 +638,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat13[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13]) => N, default: (Txn) => N)
-                                                                                                                                                                                                (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String)
-                                                                                                                                                                                                (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                                                                                                                (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String,
+                                                                                                                                                                                                 nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -691,15 +695,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat14[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14]) => N, default: (Txn) => N)
-                                                                                                                                                                                                             (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String)
-                                                                                                                                                                                                             (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                                                                                                                             (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String,
+                                                                                                                                                                                                              nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -750,15 +754,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat15[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14], Box[P15]) => N, default: (Txn) => N)
-                                                                                                                                                                                                                          (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String)
-                                                                                                                                                                                                                          (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                                                                                                                                          (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String,
+                                                                                                                                                                                                                           nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -811,15 +815,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat16[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14], Box[P15], Box[P16]) => N, default: (Txn) => N)
-                                                                                                                                                                                                                                       (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String)
-                                                                                                                                                                                                                                       (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                                                                                                                                                       (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String,
+                                                                                                                                                                                                                                        nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -874,15 +878,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat17[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14], Box[P15], Box[P16], Box[P17]) => N, default: (Txn) => N)
-                                                                                                                                                                                                                                                    (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String)
-                                                                                                                                                                                                                                                    (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                                                                                                                                                                    (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String,
+                                                                                                                                                                                                                                                     nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -939,15 +943,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat18[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, P18: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14], Box[P15], Box[P16], Box[P17], Box[P18]) => N, default: (Txn) => N)
-                                                                                                                                                                                                                                                                 (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String)
-                                                                                                                                                                                                                                                                 (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                                                                                                                                                                                 (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String,
+                                                                                                                                                                                                                                                                  nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -1006,15 +1010,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat19[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, P18: Format, P19: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14], Box[P15], Box[P16], Box[P17], Box[P18], Box[P19]) => N, default: (Txn) => N)
-                                                                                                                                                                                                                                                                              (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String)
-                                                                                                                                                                                                                                                                              (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                                                                                                                                                                                              (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String,
+                                                                                                                                                                                                                                                                               nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -1075,15 +1079,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat20[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, P18: Format, P19: Format, P20: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14], Box[P15], Box[P16], Box[P17], Box[P18], Box[P19], Box[P20]) => N, default: (Txn) => N)
-                                                                                                                                                                                                                                                                                           (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String, name20: String)
-                                                                                                                                                                                                                                                                                           (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                                                                                                                                                                                                           (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String, name20: String,
+                                                                                                                                                                                                                                                                                            nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -1146,15 +1150,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat21[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, P18: Format, P19: Format, P20: Format, P21: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14], Box[P15], Box[P16], Box[P17], Box[P18], Box[P19], Box[P20], Box[P21]) => N, default: (Txn) => N)
-                                                                                                                                                                                                                                                                                                        (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String, name20: String, name21: String)
-                                                                                                                                                                                                                                                                                                        (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                                                                                                                                                                                                                        (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String, name20: String, name21: String,
+                                                                                                                                                                                                                                                                                                         nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -1219,15 +1223,15 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
 
 
   def nodeFormat22[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, P18: Format, P19: Format, P20: Format, P21: Format, P22: Format, N <: Product](construct: (Box[P1], Box[P2], Box[P3], Box[P4], Box[P5], Box[P6], Box[P7], Box[P8], Box[P9], Box[P10], Box[P11], Box[P12], Box[P13], Box[P14], Box[P15], Box[P16], Box[P17], Box[P18], Box[P19], Box[P20], Box[P21], Box[P22]) => N, default: (Txn) => N)
-                                                                                                                                                                                                                                                                                                                     (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String, name20: String, name21: String, name22: String)
-                                                                                                                                                                                                                                                                                                                     (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
+                                                                                                                                                                                                                                                                                                                     (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String, name20: String, name21: String, name22: String,
+                                                                                                                                                                                                                                                                                                                      nodeName: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
 
     def writeEntriesAndClose(n: N, c: WriteContext): Unit = {
       writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)
@@ -1294,10 +1298,11 @@ object NodeFormats {
       n
     }
 
-    def write(n: N, c: WriteContext): Unit = writeNode(n, c, name, nodeLinkStrategy, writeEntriesAndClose)
+    def write(n: N, c: WriteContext): Unit = writeNode(n, c, nodeName, nodeLinkStrategy, writeEntriesAndClose)
     def read(c: ReadContext): N = readNode(c, readEntriesAndClose)
 
   }
+
 
 
 }

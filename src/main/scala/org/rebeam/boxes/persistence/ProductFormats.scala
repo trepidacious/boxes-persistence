@@ -9,16 +9,12 @@ object ProductFormats {
   }
 
 
-
-
-
-
   def productFormat1[P1: Format, P <: Product](construct: (P1) => P)
-                                              (name1: String)
-                                              (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                              (name1: String,
+                                               productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       c.writer.write(CloseDict)
     }
@@ -53,11 +49,11 @@ object ProductFormats {
 
 
   def productFormat2[P1: Format, P2: Format, P <: Product](construct: (P1, P2) => P)
-                                                          (name1: String, name2: String)
-                                                          (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                          (name1: String, name2: String,
+                                                           productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       c.writer.write(CloseDict)
@@ -96,11 +92,11 @@ object ProductFormats {
 
 
   def productFormat3[P1: Format, P2: Format, P3: Format, P <: Product](construct: (P1, P2, P3) => P)
-                                                                      (name1: String, name2: String, name3: String)
-                                                                      (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                      (name1: String, name2: String, name3: String,
+                                                                       productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -143,11 +139,11 @@ object ProductFormats {
 
 
   def productFormat4[P1: Format, P2: Format, P3: Format, P4: Format, P <: Product](construct: (P1, P2, P3, P4) => P)
-                                                                                  (name1: String, name2: String, name3: String, name4: String)
-                                                                                  (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                  (name1: String, name2: String, name3: String, name4: String,
+                                                                                   productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -194,11 +190,11 @@ object ProductFormats {
 
 
   def productFormat5[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P <: Product](construct: (P1, P2, P3, P4, P5) => P)
-                                                                                              (name1: String, name2: String, name3: String, name4: String, name5: String)
-                                                                                              (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                              (name1: String, name2: String, name3: String, name4: String, name5: String,
+                                                                                               productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -249,11 +245,11 @@ object ProductFormats {
 
 
   def productFormat6[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6) => P)
-                                                                                                          (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String)
-                                                                                                          (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                          (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String,
+                                                                                                           productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -308,11 +304,11 @@ object ProductFormats {
 
 
   def productFormat7[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6, P7) => P)
-                                                                                                                      (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String)
-                                                                                                                      (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                                      (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String,
+                                                                                                                       productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -371,11 +367,11 @@ object ProductFormats {
 
 
   def productFormat8[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6, P7, P8) => P)
-                                                                                                                                  (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String)
-                                                                                                                                  (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                                                  (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String,
+                                                                                                                                   productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -438,11 +434,11 @@ object ProductFormats {
 
 
   def productFormat9[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6, P7, P8, P9) => P)
-                                                                                                                                              (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String)
-                                                                                                                                              (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                                                              (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String,
+                                                                                                                                               productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -509,11 +505,11 @@ object ProductFormats {
 
 
   def productFormat10[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10) => P)
-                                                                                                                                                            (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String)
-                                                                                                                                                            (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                                                                            (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String,
+                                                                                                                                                             productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -584,11 +580,11 @@ object ProductFormats {
 
 
   def productFormat11[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11) => P)
-                                                                                                                                                                         (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String)
-                                                                                                                                                                         (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                                                                                         (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String,
+                                                                                                                                                                          productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -663,11 +659,11 @@ object ProductFormats {
 
 
   def productFormat12[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12) => P)
-                                                                                                                                                                                      (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String)
-                                                                                                                                                                                      (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                                                                                                      (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String,
+                                                                                                                                                                                       productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -746,11 +742,11 @@ object ProductFormats {
 
 
   def productFormat13[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13) => P)
-                                                                                                                                                                                                   (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String)
-                                                                                                                                                                                                   (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                                                                                                                   (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String,
+                                                                                                                                                                                                    productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -833,11 +829,11 @@ object ProductFormats {
 
 
   def productFormat14[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14) => P)
-                                                                                                                                                                                                                (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String)
-                                                                                                                                                                                                                (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                                                                                                                                (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String,
+                                                                                                                                                                                                                 productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -924,11 +920,11 @@ object ProductFormats {
 
 
   def productFormat15[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15) => P)
-                                                                                                                                                                                                                             (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String)
-                                                                                                                                                                                                                             (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                                                                                                                                             (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String,
+                                                                                                                                                                                                                              productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -1019,11 +1015,11 @@ object ProductFormats {
 
 
   def productFormat16[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16) => P)
-                                                                                                                                                                                                                                          (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String)
-                                                                                                                                                                                                                                          (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                                                                                                                                                          (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String,
+                                                                                                                                                                                                                                           productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -1118,11 +1114,11 @@ object ProductFormats {
 
 
   def productFormat17[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17) => P)
-                                                                                                                                                                                                                                                       (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String)
-                                                                                                                                                                                                                                                       (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                                                                                                                                                                       (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String,
+                                                                                                                                                                                                                                                        productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -1221,11 +1217,11 @@ object ProductFormats {
 
 
   def productFormat18[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, P18: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18) => P)
-                                                                                                                                                                                                                                                                    (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String)
-                                                                                                                                                                                                                                                                    (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                                                                                                                                                                                    (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String,
+                                                                                                                                                                                                                                                                     productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -1328,11 +1324,11 @@ object ProductFormats {
 
 
   def productFormat19[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, P18: Format, P19: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19) => P)
-                                                                                                                                                                                                                                                                                 (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String)
-                                                                                                                                                                                                                                                                                 (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                                                                                                                                                                                                 (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String,
+                                                                                                                                                                                                                                                                                  productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -1439,11 +1435,11 @@ object ProductFormats {
 
 
   def productFormat20[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, P18: Format, P19: Format, P20: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20) => P)
-                                                                                                                                                                                                                                                                                              (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String, name20: String)
-                                                                                                                                                                                                                                                                                              (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                                                                                                                                                                                                              (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String, name20: String,
+                                                                                                                                                                                                                                                                                               productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -1554,11 +1550,11 @@ object ProductFormats {
 
 
   def productFormat21[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, P18: Format, P19: Format, P20: Format, P21: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21) => P)
-                                                                                                                                                                                                                                                                                                           (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String, name20: String, name21: String)
-                                                                                                                                                                                                                                                                                                           (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                                                                                                                                                                                                                           (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String, name20: String, name21: String,
+                                                                                                                                                                                                                                                                                                            productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -1673,11 +1669,11 @@ object ProductFormats {
 
 
   def productFormat22[P1: Format, P2: Format, P3: Format, P4: Format, P5: Format, P6: Format, P7: Format, P8: Format, P9: Format, P10: Format, P11: Format, P12: Format, P13: Format, P14: Format, P15: Format, P16: Format, P17: Format, P18: Format, P19: Format, P20: Format, P21: Format, P22: Format, P <: Product](construct: (P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20, P21, P22) => P)
-                                                                                                                                                                                                                                                                                                                        (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String, name20: String, name21: String, name22: String)
-                                                                                                                                                                                                                                                                                                                        (name: TokenName = NoName) : Format[P] = new Format[P] {
+                                                                                                                                                                                                                                                                                                                        (name1: String, name2: String, name3: String, name4: String, name5: String, name6: String, name7: String, name8: String, name9: String, name10: String, name11: String, name12: String, name13: String, name14: String, name15: String, name16: String, name17: String, name18: String, name19: String, name20: String, name21: String, name22: String,
+                                                                                                                                                                                                                                                                                                                         productName: TokenName = NoName) : Format[P] = new Format[P] {
 
     def write(p: P, c: WriteContext): Unit = {
-      c.writer.write(OpenDict(name))
+      c.writer.write(OpenDict(productName))
       writeDictEntry[P1](p, name1, 0, c)
       writeDictEntry[P2](p, name2, 1, c)
       writeDictEntry[P3](p, name3, 2, c)
@@ -1793,5 +1789,6 @@ object ProductFormats {
     }
 
   }
+
 
 }

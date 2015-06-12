@@ -40,11 +40,11 @@ object ProductFormatsGen {
 
     s"""
       |  def productFormat$fieldCount[$fieldTypes, P <: Product](construct: ($constructorParameters) => P)
-      |  ($productNameParameters)
-      |  (name: TokenName = NoName) : Format[P] = new Format[P] {
+      |  ($productNameParameters,
+      |  productName: TokenName = NoName) : Format[P] = new Format[P] {
       |
       |    def write(p: P, c: WriteContext): Unit = {
-      |      c.writer.write(OpenDict(name))
+      |      c.writer.write(OpenDict(productName))
       |      $writeDictEntries
       |      c.writer.write(CloseDict)
       |    }
