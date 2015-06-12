@@ -30,6 +30,14 @@ object BasicFormats {
 
   /**
    * Lazy format for nested/recursive case classes/nodes
+   * To use, wrap the normal Format for the recursive data, add a Format[T] annotation, and assign to a lazy val, e.g.
+   *
+   * case class Nested(i: Int, n: Option[Nested])
+   * implicit lazy val nestedFormat: Format[Nested] = lazyFormat(productFormat2(Nested.apply)("i", "n"))
+   *
+   * This breaks the cycle that would otherwise result in a compile time error or runtime stack overflow.
+   *
+   * @param format A non-lazy format to which to lazily delegate
    */
   def lazyFormat[T](format: => Format[T]) = new Format[T] {
     lazy val delegate = format
