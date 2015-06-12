@@ -11,8 +11,24 @@ object NodeFormatsGen {
    * $writeDictEntries The code to write all fields as dict entries, e.g. "writeDictEntry[P1](n, name1, 0, c, boxLinkStrategy)\nwriteDictEntry[P2](n, name2, 1, c, boxLinkStrategy)\n ..."
    * $useDictEntriesCases The cases to read all fields by calling useDictEntry, e.g. "case s if s == name1 => useDictEntry[P1](n, 0, c, link)\ncase s if s == name2 => useDictEntry[P2](n, 1, c, link)\n ..."
    */
-  val nodeFormatTemplate =
-    """
+  private def genNodeFormat(n: Int) = {
+    val indices = Range(1, n + 1)
+
+    def format(f: (Int) => String, sep: String) = indices.map(f(_)).mkString(sep)
+
+    val fieldCount =            "" + n
+
+    val fieldTypes =            format(i => s"P$i: Format", ", ")
+
+    val constructorParameters =  format(i => s"Box[P$i]", ", ")
+
+    val productNameParameters =  format(i => s"name$i: String", ", ")
+
+    val writeDictEntries =      format(i => s"writeDictEntry[P$i](n, name$i, ${i - 1}, c, boxLinkStrategy)", "\n      ")
+
+    val useDictEntriesCases =   format(i => s"case s if s == name$i => useDictEntry[P$i](n, ${i - 1}, c, link)", "\n            ")
+
+    val nodeFormat = s"""
       |  def nodeFormat$fieldCount[$fieldTypes, N <: Product](construct: ($constructorParameters) => N, default: (Txn) => N)
       |      ($productNameParameters)
       |      (name: TokenName = NoName, boxLinkStrategy: NoDuplicatesLinkStrategy = EmptyLinks, nodeLinkStrategy: LinkStrategy = EmptyLinks) : Format[N] = new Format[N] {
@@ -46,32 +62,7 @@ object NodeFormatsGen {
       |  }
     """.stripMargin
 
-  private def genNodeFormat(n: Int) = {
-    val indices = Range(1, n + 1)
-
-    def format(f: (Int) => String, sep: String) = indices.map(f(_)).mkString(sep)
-
-    val fieldCount =            "" + n
-
-    val fieldTypes =            format(i => s"P$i: Format", ", ")
-
-    val constructorParameters =  format(i => s"Box[P$i]", ", ")
-
-    val productNameParameters =  format(i => s"name$i: String", ", ")
-
-    val writeDictEntries =      format(i => s"writeDictEntry[P$i](n, name$i, ${i - 1}, c, boxLinkStrategy)", "\n      ")
-
-    val useDictEntriesCases =   format(i => s"case s if s == name$i => useDictEntry[P$i](n, ${i - 1}, c, link)", "\n            ")
-
-    val nodeFormats = nodeFormatTemplate
-      .replaceAllLiterally("$fieldCount", fieldCount)
-      .replaceAllLiterally("$fieldTypes", fieldTypes)
-      .replaceAllLiterally("$constructorParameters", constructorParameters)
-      .replaceAllLiterally("$productNameParameters", productNameParameters)
-      .replaceAllLiterally("$writeDictEntries", writeDictEntries)
-      .replaceAllLiterally("$useDictEntriesCases", useDictEntriesCases)
-
-    println(nodeFormats)
+    println(nodeFormat)
   }
 
   def main(args: Array[String]) {
