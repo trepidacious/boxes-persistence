@@ -334,3 +334,95 @@
 //    }
 //  }
 //}
+
+//object Main extends App {
+//
+//  trait Printer[T] {
+//    def print(t: T): String
+//  }
+//
+//  def print[T: Printer](t: T) = implicitly[Printer[T]].print(t)
+//
+//  case class Nested(i: Int, n: Option[Int])
+//
+//  def recursivePrint() = {
+//
+//    implicit val printer = new Printer[Nested] {
+//      def print(n: Nested) = n match {
+//        case Nested(i, None) => s"Nested($i, None)"
+//        case Nested(i, Some(nn)) => s"Nested($i, Some($nn))"
+//      }
+//    }
+//
+//    print(Nested(0, Some(1)))
+//  }
+//
+//  println(recursivePrint())
+//
+//  def recursiveImplicitPrint() = {
+//    implicit val intPrinter = new Printer[Int] {
+//      def print(i: Int) = "" + i
+//    }
+//    implicit def optionPrinter[T: Printer] = new Printer[Option[T]] {
+//      def print(o: Option[T]) = o match {
+//        case Some(t) => "Some(" + implicitly[Printer[T]].print(t) + ")"
+//        case None => "None"
+//      }
+//    }
+//    implicit def nestedPrinter = new Printer[Nested] {
+//      def print(n: Nested) = "Nested(" + implicitly[Printer[Int]].print(n.i) + ", " + implicitly[Printer[Option[Int]]].print(n.n) + ")"
+//    }
+//
+//    print(Nested(0, Some(1)))
+//  }
+//
+//  println(recursiveImplicitPrint())
+//
+//}
+
+
+//object Main3 extends App {
+//
+//  trait Printer[T] {
+//    def print(t: T): String
+//  }
+//
+//  def print[T: Printer](t: T) = implicitly[Printer[T]].print(t)
+//
+//  case class Nested(i: Int, n: Option[Nested])
+//
+//  def recursivePrint() = {
+//
+//    implicit val printer = new Printer[Nested] {
+//      def print(n: Nested) = n match {
+//        case Nested(i, None) => s"Nested($i, None)"
+//        case Nested(i, Some(nn)) => s"Nested($i, Some($nn))"
+//      }
+//    }
+//
+//    print(Nested(0, Some(Nested(1, None))))
+//  }
+//
+//  println(recursivePrint())
+//
+//  def recursiveImplicitPrint() = {
+//    implicit val intPrinter = new Printer[Int] {
+//      def print(i: Int) = "" + i
+//    }
+//    implicit def optionPrinter[T: Printer] = new Printer[Option[T]] {
+//      def print(o: Option[T]) = o match {
+//        case Some(t) => "Some(" + implicitly[Printer[T]].print(t) + ")"
+//        case None => "None"
+//      }
+//    }
+//    //Needs lazy
+//    implicit val nestedPrinter: Printer[Nested] = (new Printer[Nested] {
+//      def print(n: Nested) = "Nested(" + implicitly[Printer[Int]].print(n.i) + ", " + implicitly[Printer[Option[Nested]]].print(n.n) + ")"
+//    })
+//
+//    print(Nested(0, Some(Nested(1, None))))
+//  }
+//
+//  println(recursiveImplicitPrint())
+//
+//}

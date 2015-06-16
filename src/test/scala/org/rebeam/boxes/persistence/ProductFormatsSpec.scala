@@ -7,19 +7,13 @@ import org.rebeam.boxes.persistence.PrimFormats._
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 
+import PersistenceSpecUtils._
+
 case class CaseClass6(b: Boolean, i: Int, l: Long, f: Float, d: Double, s: String)
 
 case class Nested(i: Int, n: Option[Nested])
 
 class ProductFormatsSpec extends WordSpec with PropertyChecks with ShouldMatchers {
-
-  def duplicate[T](t: T, format: Format[T]): Unit = {
-    implicit val f = format
-    implicit val shelf = ShelfDefault()
-    val writtenTokens = shelf.read(implicit txn => BufferIO.toTokens(t))
-    val read = shelf.transact(implicit txn => BufferIO.fromTokens[T](writtenTokens))
-    read shouldBe t
-  }
 
   def duplicateCaseClass6(b: Boolean, i: Int, l: Long, f: Float, d: Double, s: String): Unit = duplicate(
     CaseClass6(b, i, l, f, d, s),
@@ -38,12 +32,10 @@ class ProductFormatsSpec extends WordSpec with PropertyChecks with ShouldMatcher
     "duplicate arbitrary case class" in forAll { (s: String, i: Int) => duplicateCaseClass(s, i) }
 
     "duplicate nested case class" in {
-      //TODO why do we need lazy val as well as lazyFormat? spray-json readme doesn't include it:
-      // https://github.com/spray/spray-json
-      //However similar examples in argonaut do use implicit lazy vals for formats:
-      // https://github.com/argonaut-io/argonaut/issues/64
-      //Note lazy val and format and Format[Nested] type annotation for nested case class, this is a pain
-      //but otherwise we have a bit of a catch 22 ;)
+      //Note the requirements for using a recursive case class:
+      // * lazy val (could also use def)
+      // * lazyFormat
+      // * Format[Nested] type annotation
       implicit lazy val nestedFormat: Format[Nested] = lazyFormat(productFormat2(Nested.apply)("i", "n"))
 
       duplicate(

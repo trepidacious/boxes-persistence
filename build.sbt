@@ -12,8 +12,8 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.rebeam" %% "transact" % "0.1-SNAPSHOT",
-  "io.spray" %%  "spray-json" % "1.3.1",
-  "com.chuusai" %% "shapeless" % "2.1.0",
+//  "io.spray" %%  "spray-json" % "1.3.1",
+//  "com.chuusai" %% "shapeless" % "2.1.0",
   "com.google.protobuf" % "protobuf-java" % "2.6.1",
   "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test",
   "org.scalacheck" %% "scalacheck" % "1.11.3" % "test"  //Note that this is NOT the most recent version of scalacheck,
