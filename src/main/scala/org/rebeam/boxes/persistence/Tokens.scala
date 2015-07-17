@@ -2,7 +2,7 @@ package org.rebeam.boxes.persistence
 
 import java.io.{OutputStream, InputStream}
 
-import boxes.transact._
+import org.rebeam.boxes.core._
 
 import annotation.implicitNotFound
 import scala.collection._

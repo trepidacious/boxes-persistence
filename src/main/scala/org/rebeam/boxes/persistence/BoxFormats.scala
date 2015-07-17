@@ -1,11 +1,12 @@
 package org.rebeam.boxes.persistence
 
-import boxes.transact.Box
+import org.rebeam.boxes.core.Box
+
 import scala.language.implicitConversions
 
 private object BoxFormatUtils {
   def write[T](box: Box[T], c: WriteContext, linkStrategy: LinkStrategy, writes: Writes[T]) {
-    val id = box.id()
+    val id = box.id
     linkStrategy match {
 
       case AllLinks =>

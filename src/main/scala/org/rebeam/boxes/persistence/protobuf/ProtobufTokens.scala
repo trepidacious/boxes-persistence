@@ -1,6 +1,5 @@
 package org.rebeam.boxes.persistence.protobuf
 
-import boxes.transact.TxnR
 import org.rebeam.boxes.persistence._
 
 import java.io.{IOException, InputStream, OutputStream}

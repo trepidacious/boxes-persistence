@@ -2,7 +2,7 @@ package org.rebeam.boxes.persistence
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
-import boxes.transact.{ShelfDefault, Txn, TxnR, Box}
+import org.rebeam.boxes.core.{ShelfDefault, Txn, TxnR, Box}
 import org.rebeam.boxes.persistence.NodeFormats._
 import org.rebeam.boxes.persistence.ProductFormats._
 import org.rebeam.boxes.persistence.PrimFormats._

@@ -1,6 +1,6 @@
 package org.rebeam.boxes.persistence
 
-import boxes.transact.ShelfDefault
+import org.rebeam.boxes.core.ShelfDefault
 import org.rebeam.boxes.persistence.BasicFormats._
 import org.rebeam.boxes.persistence.ProductFormats._
 import org.rebeam.boxes.persistence.PrimFormats._

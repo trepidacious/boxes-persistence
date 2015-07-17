@@ -1,6 +1,6 @@
 package org.rebeam.boxes.persistence
 
-import boxes.transact.ShelfDefault
+import org.rebeam.boxes.core.ShelfDefault
 import org.scalatest.Matchers
 
 object PersistenceSpecUtils extends Matchers {

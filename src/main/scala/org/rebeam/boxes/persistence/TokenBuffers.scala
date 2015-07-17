@@ -1,6 +1,6 @@
 package org.rebeam.boxes.persistence
 
-import boxes.transact.{Txn, TxnR}
+import org.rebeam.boxes.core.{Txn, TxnR}
 
 import scala.collection.mutable.ListBuffer
 

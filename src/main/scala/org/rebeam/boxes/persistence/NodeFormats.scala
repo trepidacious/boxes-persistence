@@ -1,6 +1,6 @@
 package org.rebeam.boxes.persistence
 
-import boxes.transact.{Txn, Box}
+import org.rebeam.boxes.core.{Txn, Box}
 
 /**
  * These formats are very similar to ProductFormats, with the important difference that they expect to read/write
@@ -31,7 +31,7 @@ object NodeFormats {
     implicit val txn = c.txn
 
     val box = n.productElement(index).asInstanceOf[Box[T]]
-    val id = box.id()
+    val id = box.id
 
     //NodeFormat will not use link references, but can use ids, for example for sharing box id with clients on network.
     //This is done by caching the box and using the id, but throwing an exception if we find the box is already cached.
