@@ -15,14 +15,13 @@ case class Person(name: Box[String], age: Box[Int]) {
   def asString(implicit txn: TxnR) = "Person(" + name() + ", " + age() + ")"
 }
 
-case class CaseClass(s: String, i: Int)
-
 object Person {
-  def default(txn: Txn): Person = {
-    implicit val t = txn
+  def default(implicit txn: Txn): Person = {
     Person(Box(""), Box(0))
   }
 }
+
+case class CaseClass(s: String, i: Int)
 
 class ProtobufSpec extends WordSpec with PropertyChecks with ShouldMatchers {
 
@@ -50,7 +49,7 @@ class ProtobufSpec extends WordSpec with PropertyChecks with ShouldMatchers {
 
   def duplicatePerson(name: String, age: Int) = {
     implicit val shelf = ShelfDefault()
-    implicit val personFormat = nodeFormat2(Person.apply, Person.default)("name", "age", nodeName = PresentationName("Person"), boxLinkStrategy = EmptyLinks, nodeLinkStrategy = AllLinks)
+    implicit val personFormat = nodeFormat2(Person.apply, Person.default(_))("name", "age", nodeName = PresentationName("Person"), boxLinkStrategy = EmptyLinks, nodeLinkStrategy = AllLinks)
 
     val bob = shelf.transact(implicit txn => makePerson(name, age))
 
@@ -71,7 +70,7 @@ class ProtobufSpec extends WordSpec with PropertyChecks with ShouldMatchers {
   }
 
   def duplicateIdenticalPersonList(boxLinkStrategy: NoDuplicatesLinkStrategy, nodeLinkStrategy: LinkStrategy) = {
-    implicit val personFormat = nodeFormat2(Person.apply, Person.default)("name", "age", nodeName = PresentationName("Person"), boxLinkStrategy, nodeLinkStrategy)
+    implicit val personFormat = nodeFormat2(Person.apply, Person.default(_))("name", "age", nodeName = PresentationName("Person"), boxLinkStrategy, nodeLinkStrategy)
 
     implicit val shelf = ShelfDefault()
 
@@ -111,7 +110,7 @@ class ProtobufSpec extends WordSpec with PropertyChecks with ShouldMatchers {
     "duplicate Person" in duplicatePerson("bob", 34)
 
     "duplicate List[Person]" in {
-      implicit val personFormat = nodeFormat2(Person.apply, Person.default)("name", "age", nodeName = PresentationName("Person"), boxLinkStrategy = EmptyLinks, nodeLinkStrategy = AllLinks)
+      implicit val personFormat = nodeFormat2(Person.apply, Person.default(_))("name", "age", nodeName = PresentationName("Person"), boxLinkStrategy = EmptyLinks, nodeLinkStrategy = AllLinks)
       implicit val shelf = ShelfDefault()
       val list = shelf.transact(implicit txn => List(makePerson("a", 1), makePerson("b", 2), makePerson("c", 3), makePerson("d", 4), makePerson("e", 5)))
       val os = new ByteArrayOutputStream()
