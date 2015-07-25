@@ -18,21 +18,23 @@ object ProtobufTokens {
   val floatToken        = 7
   val doubleToken       = 8
   val stringToken       = 9
+  val bigIntToken       = 10
+  val bigDecimalToken   = 11
 
-  val openArr           = 10
-  val closeArr          = 11
+  val openArr           = 12
+  val closeArr          = 13
 
-  val boxToken          = 12
+  val boxToken          = 14
 
-  val noneToken         = 13
+  val noneToken         = 15
 
-  val linkRef           = 14
-  val linkId            = 15
-  val linkEmpty         = 16
+  val linkRef           = 16
+  val linkId            = 17
+  val linkEmpty         = 18
 
-  val noName            = 17
-  val presentationName  = 18
-  val significantName   = 19
+  val noName            = 19
+  val presentationName  = 20
+  val significantName   = 21
 }
 
 object ProtobufTokenWriter {
@@ -87,6 +89,12 @@ class ProtobufTokenReader(is: CodedInputStream, onClose: => Unit) extends TokenR
       case ProtobufTokens.floatToken => FloatToken(is.readFloat())
       case ProtobufTokens.doubleToken => DoubleToken(is.readDouble())
       case ProtobufTokens.stringToken => StringToken(is.readString())
+
+      case ProtobufTokens.bigIntToken => BigIntToken(BigInt(is.readByteArray()))
+      case ProtobufTokens.bigDecimalToken =>
+        val unscaledValue = BigInt(is.readByteArray())
+        val scale = is.readRawVarint32()
+        BigDecimalToken(BigDecimal(unscaledValue, scale))
 
       case ProtobufTokens.openArr => OpenArr(readName())
       case ProtobufTokens.closeArr => CloseArr
@@ -160,6 +168,15 @@ class ProtobufTokenWriter(os: CodedOutputStream, onClose: => Unit) extends Token
       case DoubleToken(p) =>
         os.writeRawVarint32(doubleToken)
         os.writeDoubleNoTag(p)
+
+      case BigIntToken(p) =>
+        os.writeRawVarint32(bigIntToken)
+        os.writeByteArrayNoTag(p.toByteArray)
+
+      case BigDecimalToken(p) =>
+        os.writeRawVarint32(bigDecimalToken)
+        os.writeByteArrayNoTag(p.bigDecimal.unscaledValue().toByteArray)
+        os.writeRawVarint32(p.bigDecimal.scale())
 
       case StringToken(p) =>
         os.writeRawVarint32(stringToken)

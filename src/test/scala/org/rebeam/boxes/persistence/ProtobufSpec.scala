@@ -11,18 +11,6 @@ import org.rebeam.boxes.persistence.protobuf.ProtobufIO
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 
-case class Person(name: Box[String], age: Box[Int]) {
-  def asString(implicit txn: TxnR) = "Person(" + name() + ", " + age() + ")"
-}
-
-object Person {
-  def default(implicit txn: Txn): Person = {
-    Person(Box(""), Box(0))
-  }
-}
-
-case class CaseClass(s: String, i: Int)
-
 class ProtobufSpec extends WordSpec with PropertyChecks with ShouldMatchers {
 
   def makePerson(name: String, age: Int)(implicit txn: Txn): Person = {
@@ -133,6 +121,8 @@ class ProtobufSpec extends WordSpec with PropertyChecks with ShouldMatchers {
       forAll{ (list: List[Float]) => duplicateList(list)};    info("of Float")
       forAll{ (list: List[Boolean]) => duplicateList(list)};  info("of Boolean")
       forAll{ (list: List[String]) => duplicateList(list)};   info("of String")
+      forAll{ (list: List[BigInt]) => duplicateList(list)};   info("of BigInt")
+      forAll{ (list: List[BigDecimal]) => duplicateList(list)};   info("of BigDecimal")
     }
 
     "duplicate arbitrary Person" in forAll{ (name: String, age: Int) => duplicatePerson(name, age)}

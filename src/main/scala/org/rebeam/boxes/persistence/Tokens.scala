@@ -102,6 +102,8 @@ case class LongToken(p: Long) extends Prim[Long]
 case class FloatToken(p: Float) extends Prim[Float]
 case class DoubleToken(p: Double) extends Prim[Double]
 case class StringToken(p: String) extends Prim[String]
+case class BigIntToken(p: BigInt) extends Prim[BigInt]
+case class BigDecimalToken(p: BigDecimal) extends Prim[BigDecimal]
 
 /**
  * Represents an Option value of None. Some is represented as the value itself.
@@ -329,6 +331,23 @@ trait TokenReader {
     t match {
       case DoubleToken(s) => s
       case _ => throw new IncorrectTokenException("Expected a DoubleToken, got " + t)
+    }
+  }
+  @throws [IncorrectTokenException]
+  def pullBigInt(): BigInt = {
+    val t = pull()
+    t match {
+      case BigIntToken(i) => i
+      case _ => throw new IncorrectTokenException("Expected a BigIntToken, got " + t)
+    }
+  }
+
+  @throws [IncorrectTokenException]
+  def pullBigDecimal(): BigDecimal = {
+    val t = pull()
+    t match {
+      case BigDecimalToken(n) => n
+      case _ => throw new IncorrectTokenException("Expected a BigDecimalToken, got " + t)
     }
   }
   @throws [IncorrectTokenException]

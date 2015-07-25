@@ -21,6 +21,14 @@ object PrimFormats {
     def write(s: Double, c: WriteContext) = c.writer.write(DoubleToken(s))
     def read(c: ReadContext) = c.reader.pullDouble()
   }
+  implicit val bigIntFormat = new Format[BigInt] {
+    def write(n: BigInt, c: WriteContext) = c.writer.write(BigIntToken(n))
+    def read(c: ReadContext) = c.reader.pullBigInt()
+  }
+  implicit val bigDecimalFormat = new Format[BigDecimal] {
+    def write(n: BigDecimal, c: WriteContext) = c.writer.write(BigDecimalToken(n))
+    def read(c: ReadContext) = c.reader.pullBigDecimal()
+  }
   implicit val stringFormat = new Format[String] {
     def write(s: String, c: WriteContext) = c.writer.write(StringToken(s))
     def read(c: ReadContext) = c.reader.pullString()

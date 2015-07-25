@@ -82,7 +82,7 @@ object JsonParser {
   case object End extends Token
   case class StringVal(value: String) extends Token
   case class IntVal(value: BigInt) extends Token
-  case class DoubleVal(value: Double) extends Token
+  case class DoubleVal(value: BigDecimal) extends Token
   case class BoolVal(value: Boolean) extends Token
   case object NullVal extends Token
   case object OpenArr extends Token
@@ -133,15 +133,6 @@ object JsonParser {
     buf.substring
   }
 
-  // FIXME fail fast to prevent infinite loop, see
-  // http://www.exploringbinary.com/java-hangs-when-converting-2-2250738585072012e-308/
-  private val BrokenDouble = BigDecimal("2.2250738585072012e-308")
-  private[json] def parseDouble(s: String) = {
-    val d = BigDecimal(s)
-    if (d == BrokenDouble) sys.error("Error parsing 2.2250738585072012e-308")
-    else d.doubleValue
-  }
-
   private val EOF = (-1).asInstanceOf[Char]
 
   class Parser(buf: Buffer) {
@@ -185,13 +176,16 @@ object JsonParser {
           if (c == '.' || c == 'e' || c == 'E') {
             doubleVal = true
             s.append(c)
-          } else if (!(Character.isDigit(c) || c == '.' || c == 'e' || c == 'E' || c == '-')) {
+
+          //trepidacious - added '+' - it can occur in exponent
+          //If we have something that is not a digit, or one of .eE-+, we are at the end of the number
+          } else if (!(Character.isDigit(c) || c == '.' || c == 'e' || c == 'E' || c == '-' || c == '+')) {
             wasInt = false
             buf.back
           } else s.append(c)
         }
         val value = s.toString
-        if (doubleVal) DoubleVal(parseDouble(value))
+        if (doubleVal) DoubleVal(BigDecimal(value))
         else IntVal(BigInt(value))
       }
 
