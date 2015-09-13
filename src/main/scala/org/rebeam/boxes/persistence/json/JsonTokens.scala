@@ -20,34 +20,39 @@ class JsonTokenWriter(writer: Writer, pretty: Boolean = false) extends TokenWrit
   private def isReasonableBigDecimal(d: BigDecimal) = Try{BigDecimal(d.toString)}.isSuccess
 
   //We need to output a comma before a Prim, OpenDict, OpenArr or DictEntry, IFF we
-  //have a list open, and our previous token is not the actual OpenArr (which
-  //means we are the first entry in the Arr).
+  //have an array open, and our previous token is not the actual OpenArr (which
+  //means we are the first entry in the Arr), or when we have a dict open, and
+  //our previous token was not the actual OpenDict or a DictEntry.
   private def commaNeeded = {
     tokens.headOption match {
       case Some(OpenArr(name)) => previousToken != Some(OpenArr(name))
       case Some(OpenDict(name, link)) => previousToken match {
           case Some(OpenDict(_, _)) => false
           case Some(DictEntry(_, _)) => false
-          case Some(BoxToken(_)) => false
           case _ => true
         }
       case _ => false
     }
   }
 
-  private def commaIfNeeded() = if (commaNeeded) print(",") else println()
+  private def commaIfNeeded() = if (commaNeeded) println(",")
 
   private def printPrim[P](p:P) {
     commaIfNeeded()
     print("" + p)
   }
 
-  private def quoted(s: String) = JsonUtils.quote(s)
+  private def quoted(s: String): String = JsonUtils.quote(s)
 
-  private def print(s:String) = writer.write(s)
+  private def print(s:String): Unit = writer.write(s)
+
+  private def println(s:String): Unit = {
+    writer.write(s)
+    println()
+  }
 
   private def println() = if (pretty) {
-    writer.write("\n")
+    print("\n")
     Range(0, tokens.count(t => t match {
       case OpenDict(_,_) => true
       case OpenArr(_) => true
@@ -55,12 +60,14 @@ class JsonTokenWriter(writer: Writer, pretty: Boolean = false) extends TokenWrit
     })).foreach{i => writer.write("  ")}
   }
 
-  def write(t: Token) {
+  private def prettySpace = if (pretty) " " else ""
+
+  def write(t: Token): Unit = {
     t match {
       case OpenDict(name, link) =>
         commaIfNeeded()
-        print("{")
         tokens.push(t)
+        println("{")
         name match {
           case SignificantName(_) => throw new IncorrectTokenException("Cannot use OpenDict with " + name + " in json output")
           case _ => {}
@@ -75,12 +82,11 @@ class JsonTokenWriter(writer: Writer, pretty: Boolean = false) extends TokenWrit
         link match {
           case LinkEmpty => {}
           case LinkId(id) =>
-            print(quoted("_" + name + "_id") + ":" + id + ",")
             println()
+            print(quoted("_" + name + "_id") + ":" + prettySpace + id + ",")
           case LinkRef(id) => new IncorrectTokenException("Cannot use DictEntry with LinkRef in json output, found ref to " + id)
         }
-        println()
-        print(quoted(name) + ":")
+        print(quoted(name) + ":" + prettySpace)
 
       case CloseDict =>
         tokens.pop() match {
@@ -125,7 +131,6 @@ class JsonTokenWriter(writer: Writer, pretty: Boolean = false) extends TokenWrit
 
       case NoneToken => {
         print("null")
-        println()
       }
 
     }

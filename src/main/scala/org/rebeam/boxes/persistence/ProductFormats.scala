@@ -8,6 +8,26 @@ object ProductFormats {
     implicitly[Format[T]].write(p.productElement(index).asInstanceOf[T], c)
   }
 
+  def productFormat0[P <: Product](construct: => P)
+                                              (productName: TokenName = NoName) : Format[P] = new Format[P] {
+
+    def write(p: P, c: WriteContext): Unit = {
+      c.writer.write(OpenDict(productName))
+      c.writer.write(CloseDict)
+    }
+
+    def read(c: ReadContext): P = {
+      c.reader.pull() match {
+        case OpenDict(_, _) =>
+          val p = construct
+          c.reader.pullAndAssertEquals(CloseDict)
+          p
+
+        case _ => throw new IncorrectTokenException("Expected OpenDict at start of Map[String, _]")
+      }
+    }
+
+  }
 
   def productFormat1[P1: Format, P <: Product](construct: (P1) => P)
                                               (name1: String,
